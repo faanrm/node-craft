@@ -1,0 +1,50 @@
+import path from "path"
+import fs from "fs-extra"
+export class Package {
+    private projectPath!: string;
+    constructor() { }
+    async generatePackageJson() {
+        const packageJson = {
+            name: path.basename(this.projectPath),
+            description: "Generated project by node-craft",
+            main: "dist/index.ts",
+            scripts: {
+                "start": "nodemon",
+                "build": "tsc",
+                "generate": "prisma generate",
+                "migrate": "prisma db push"
+            },
+            dependencies: {
+                "express": "^4.18.2",
+                "prisma": "^5.2.0",
+                "zod": "^3.22.2",
+            },
+            devDependencies: {
+                "@types/express": "^4.17.17",
+                "@types/node": "^20.6.0",
+                "nodemon": "^3.0.1",
+                "typescript": "^5.2.2"
+            }
+        }
+        await fs.writeJSON(path.join(this.projectPath, 'package.json'), packageJson, { spaces: 2 });
+    }
+    async createTsConfig() {
+        const tsConfig = {
+            "compilerOptions": {
+                "target": "esnext",
+                "lib": ["dom", "esnext"],
+                "skipLibCheck": true,
+                "esModuleInterop": true,
+                "allowSyntheticDefaultImports": true,
+                "module": "NodeNext",
+                "moduleResolution": "nodenext",
+                "sourceMap": true,
+                "noImplicitAny": true,
+                "baseUrl": "src",
+                "outDir": "dist"
+            },
+            "include": ["./src/**/*"]
+        }
+        await fs.writeJSON(path.join(this.projectPath, 'tsconfig.json'), tsConfig, { spaces: 2 });
+    }
+}

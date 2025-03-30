@@ -1,8 +1,11 @@
 import inquirer from "inquirer";
 import path from "path"
+import fs from "fs-extra";
+import { cp } from "fs";
+import type { Package } from "./package";
 export class Project {
     private projectPath!: string;
-    constructor() { }
+    constructor(private packageService : Package) { }
     async createProject() {
         const projectDetails = await inquirer.prompt([
             {
@@ -10,10 +13,33 @@ export class Project {
                 name: 'projectName',
                 message: 'Enter project name',
                 default: 'node-craft-project'
+            },
+            {
+                type: 'confirm',
+                name: 'createModels',
+                message: 'Do you want to create models ?',
+                default: true
             }
         ]);
 
         this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
-        console.log(`Project path set to: ${this.projectPath}`);
+        //console.log(`Project path set to: ${this.projectPath}`);
+        await this.packageService.generatePackageJson();
+    }
+    async generateProjectStructure() {
+        const directory = [
+            'src/models',
+            'src/controllers',
+            'src/routes',
+            'src/services',
+            'src/utils',
+            'src/middlewares',
+            'src/validators',
+            'prisma',
+            'nodemon.json'
+        ]
+        for (const dir of directory) {
+            await fs.ensureDir(path.join(this.projectPath, dir));
+        }
     }
 }

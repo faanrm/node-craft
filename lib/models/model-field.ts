@@ -6,4 +6,9 @@ export interface ModelField {
     isRelation?: boolean;
     relationModel?: string;
     relationType?: 'OneToOne' | 'OneToMany' | 'ManyToMany';
+    minLength? : number ,
+    maxLength? : number ,
+    pattern? : string,
+    min? : number, 
+    max? : number
 }
