@@ -1,10 +1,15 @@
-import inquirer from "inquirer";
-import type { ProjectModel } from "../models/project-model";
-import { numberValidations, promptFieldDetails, stringValidations,promptModelName } from "../utils/prisma-utils";
+import fs from "fs-extra";
+import path from "path";
+import type { ProjectModel, Field } from "../models/project-model";
+import { numberValidations, promptFieldDetails, stringValidations, promptModelName } from "../utils/prisma-utils";
+
 export class Prisma {
     private models: ProjectModel[] = [];
+    private projectPath: string;
 
-    constructor() { }
+    constructor(projectPath: string) {
+        this.projectPath = projectPath;
+    }
 
     async generatePrismaModels() {
         while (true) {
@@ -26,6 +31,51 @@ export class Prisma {
             }
 
             this.models.push(model);
+        }
+    }
+
+    async generatePrismaSchema() {
+        let schemaContent = "generator client {\n  provider = \"prisma-client-js\"\n}\n\n";
+        schemaContent += "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n";
+
+        this.models.forEach((model) => {
+            schemaContent += `model ${model.name} {\n`;
+            schemaContent += `  id String @id @default(uuid())\n`;
+
+            model.fields.forEach(field => {
+                let fieldLine = `  ${field.name} `;
+
+                if (field.isRelation) {
+                    switch (field.relationType) {
+                        case 'OneToOne':
+                            fieldLine += `${field.relationModel}?`;
+                            break;
+                        case 'OneToMany':
+                        case 'ManyToMany':
+                            fieldLine += `${field.relationModel}[]`;
+                            break;
+                    }
+                } else {
+                    fieldLine += field.type;
+                }
+
+                if (field.isOptional) fieldLine += '?';
+                if (field.isUnique) fieldLine += ' @unique';
+
+                schemaContent += fieldLine + '\n';
+            });
+
+            schemaContent += '}\n\n';
+        });
+
+        try {
+            await fs.writeFile(
+                path.join(this.projectPath, 'prisma', 'schema.prisma'),
+                schemaContent
+            );
+            console.log('Schema generated successfully.');
+        } catch (error) {
+            console.error('Error generating schema:', error);
         }
     }
 }
