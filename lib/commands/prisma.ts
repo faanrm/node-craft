@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
-import type { ProjectModel, Field } from "../models/project-model";
+import type { ProjectModel } from "../models/project-model";
 import { numberValidations, promptFieldDetails, stringValidations, promptModelName } from "../utils/prisma-utils";
 
 export class Prisma {
@@ -15,7 +15,6 @@ export class Prisma {
         while (true) {
             const modelName = await promptModelName();
             if (!modelName) break;
-
             const model: ProjectModel = { name: modelName, fields: [] };
             while (true) {
                 const field = await promptFieldDetails();
