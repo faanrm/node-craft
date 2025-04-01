@@ -10,5 +10,5 @@ export interface ModelField {
     maxLength? : number ,
     pattern? : string,
     min? : number, 
-    max? : number
+    max? : number, 
 }
