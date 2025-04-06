@@ -3,12 +3,16 @@ import path from "path";
 import fs from "fs-extra";
 import type { Package } from "./package";
 import type { Prisma } from "./prisma";
+import { execSync } from "child_process";
+import chalk from "chalk";
+import type { Template } from "./template";
 export class Project {
   private projectPath!: string;
   constructor(
     private packageService: Package,
     private prismaService: Prisma,
-  ) {}
+    private templateService : Template
+  ) { }
   async createProject() {
     const projectDetails = await inquirer.prompt([
       {
@@ -27,7 +31,11 @@ export class Project {
     this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
     //console.log(`Project path set to: ${this.projectPath}`);
     await this.packageService.generatePackageJson();
-    await this.prismaService.generatePrismaModels();
+    await this.prismaService.generatePrismaModels();  
+    await this.setupProjectDependencies();
+    await this.templateService.codeTemplate();
+    await this.templateService.setupTemplate();
+
   }
   async generateProjectStructure() {
     const directory = [
@@ -45,4 +53,38 @@ export class Project {
       await fs.ensureDir(path.join(this.projectPath, dir));
     }
   }
+  async createGitignore() {
+    const gitignoreContent = `
+node_modules/
+dist/
+.env
+.prisma
+*.log
+`;
+
+    await fs.writeFile(
+      path.join(this.projectPath, '.gitignore'),
+      gitignoreContent
+    );
+  }
+
+  async createEnvFile() {
+    const envContent = `
+DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"
+`;
+
+    await fs.writeFile(
+      path.join(this.projectPath, '.env'),
+      envContent
+    );
+  }
+
+  async setupProjectDependencies() {
+    execSync(`cd ${this.projectPath} && git init`);
+
+    console.log(chalk.yellow('To install dependencies, run:'));
+    console.log(chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`));
+  }
 }
+
+
