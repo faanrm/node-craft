@@ -31,6 +31,7 @@ export class Prisma {
 
             this.models.push(model);
         }
+        await this.generatePrismaSchema();
     }
 
     async generatePrismaSchema() {

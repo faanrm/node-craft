@@ -32,7 +32,6 @@ export class Project {
       },
     ]);
     this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
-    //console.log(`Project path set to: ${this.projectPath}`);
     await this.generateProjectStructure();
     if (projectDetails.createModels){
       await this.prismaService.generatePrismaModels();  
