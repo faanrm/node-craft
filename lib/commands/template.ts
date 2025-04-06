@@ -5,7 +5,10 @@ import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
 export class Template {
   private projectPath!: string;
-  constructor() { }
+
+  constructor (projectPath : string) {
+    this.projectPath = projectPath
+  }
   private models: ProjectModel[] = [];
   async setupTemplate() {
     //create templates if !exist
@@ -15,35 +18,35 @@ export class Template {
       {
         name: "model-template.ts",
         content: await fs.readFile(
-          path.join(__dirname, "zod-model-template.ts"),
+          path.join(__dirname, "../templates/zod-model-template.ejs"),
           "utf-8",
         ),
       },
       {
         name: "service-template.ts",
         content: await fs.readFile(
-          path.join(__dirname, "zod-service-template.ts"),
+          path.join(__dirname, "../templates/zod-service-template.ejs"),
           "utf-8",
         ),
       },
       {
         name: "controller-template.ts",
         content: await fs.readFile(
-          path.join(__dirname, "zod-controller-template.ts"),
+          path.join(__dirname, "../templates/zod-controller-template.ejs"),
           "utf-8",
         ),
       },
       {
         name: "routes-template.ts",
         content: await fs.readFile(
-          path.join(__dirname, "routing-template.ts"),
+          path.join(__dirname, "../templates/routing-template.ejs"),
           "utf-8",
         ),
       },
       {
         name: "validator-middleware.ts",
         content: await fs.readFile(
-          path.join(__dirname, "zod-middleware.ts"),
+          path.join(__dirname, "../templates/zod-middleware.ts"),
           "utf-8",
         ),
       },
@@ -56,6 +59,14 @@ export class Template {
     }
   }
   async codeTemplate() {
+    // Create necessary directories
+    await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
+    await fs.ensureDir(path.join(this.projectPath, "src/models"));
+    await fs.ensureDir(path.join(this.projectPath, "src/services"));
+    await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
+    await fs.ensureDir(path.join(this.projectPath, "src/routes"));
+    
+    // Write middleware file
     await fs.writeFile(
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
@@ -63,7 +74,10 @@ export class Template {
         "utf-8",
       ),
     );
+    
+    // Generate files for each model
     for (const model of this.models) {
+      // Generate model file
       const modelContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/model-template.ts"),
@@ -77,7 +91,9 @@ export class Template {
       await fs.writeFile(
         path.join(this.projectPath, `src/models/${model.name.toLowerCase()}.model.ts`),
         modelContent
-      )
+      );
+      
+      // Generate service file
       const serviceContent = await ejs.render(
         await fs.readFile(path.join(this.projectPath, 'templates/service-template.ts'), 'utf-8'),
         { model }
@@ -86,7 +102,8 @@ export class Template {
         path.join(this.projectPath, `src/services/${model.name.toLowerCase()}.service.ts`),
         serviceContent
       );
-
+  
+      // Generate controller file
       const controllerContent = await ejs.render(
         await fs.readFile(path.join(this.projectPath, 'templates/controller-template.ts'), 'utf-8'),
         { model }
@@ -95,9 +112,10 @@ export class Template {
         path.join(this.projectPath, `src/controllers/${model.name.toLowerCase()}.controller.ts`),
         controllerContent
       );
-
+  
+      // Generate route file
       const routeContent = await ejs.render(
-        await fs.readFile(path.join(this.projectPath, 'templates/route-template.ts'), 'utf-8'),
+        await fs.readFile(path.join(this.projectPath, 'templates/routes-template.ts'), 'utf-8'),
         { model }
       );
       await fs.writeFile(
@@ -105,9 +123,9 @@ export class Template {
         routeContent
       );
     }
-
+  
     const mainContent = await ejs.render(
-      await fs.readFile(path.join(__dirname, 'main-template.ts'), 'utf-8'),
+      await fs.readFile(path.join(__dirname, '../templates/main-template.ejs'), 'utf-8'),
       {
         models: this.models,
         projectName: path.basename(this.projectPath)
@@ -121,13 +139,10 @@ export class Template {
 
   async getZodValidator(field: ModelField) {
     let validator = 'z';
-
-    // Base type
     switch (field.type) {
       case 'String':
         validator += '.string()';
 
-        // Add string validations
         if (field.minLength !== undefined) {
           validator += `.min(${field.minLength}, { message: "Must be at least ${field.minLength} characters" })`;
         }

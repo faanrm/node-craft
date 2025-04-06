@@ -2,7 +2,9 @@ import path from "path"
 import fs from "fs-extra"
 export class Package {
     private projectPath!: string;
-    constructor() { }
+    constructor(projectPath: string) {
+        this.projectPath = projectPath
+     }
     async generatePackageJson() {
         const packageJson = {
             name: path.basename(this.projectPath),

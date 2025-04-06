@@ -30,11 +30,11 @@ export class Project {
     ]);
     this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
     //console.log(`Project path set to: ${this.projectPath}`);
-    await this.packageService.generatePackageJson();
-    await this.prismaService.generatePrismaModels();  
-    await this.setupProjectDependencies();
-    await this.templateService.codeTemplate();
     await this.templateService.setupTemplate();
+    await this.prismaService.generatePrismaModels();  
+    await this.templateService.codeTemplate();
+    await this.packageService.generatePackageJson();
+    await this.setupProjectDependencies();
 
   }
   async generateProjectStructure() {
@@ -80,6 +80,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=pu
   }
 
   async setupProjectDependencies() {
+    await fs.ensureDir(this.projectPath);
     execSync(`cd ${this.projectPath} && git init`);
 
     console.log(chalk.yellow('To install dependencies, run:'));
