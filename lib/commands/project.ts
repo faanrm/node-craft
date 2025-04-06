@@ -11,8 +11,11 @@ export class Project {
   constructor(
     private packageService: Package,
     private prismaService: Prisma,
-    private templateService : Template
-  ) { }
+    private templateService : Template,
+    projectPath : string
+  ) { 
+    this.projectPath = projectPath
+  }
   async createProject() {
     const projectDetails = await inquirer.prompt([
       {
@@ -31,10 +34,14 @@ export class Project {
     this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
     //console.log(`Project path set to: ${this.projectPath}`);
     await this.templateService.setupTemplate();
-    await this.prismaService.generatePrismaModels();  
+    if (projectDetails.createModels){
+      await this.prismaService.generatePrismaModels();  
+    }
     await this.templateService.codeTemplate();
     await this.packageService.generatePackageJson();
     await this.setupProjectDependencies();
+    console.log(chalk.green(`✅ Projet ${projectDetails.projectName} créé avec succès!`));
+    console.log(chalk.blue(`🧪 Validation Zod intégrée dans le projet!`));
 
   }
   async generateProjectStructure() {

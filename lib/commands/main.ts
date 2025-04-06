@@ -2,10 +2,9 @@ import { program } from "commander";
 import type { Project } from "./project";
 import path from "path"
 export class CLI {
-    //private project: ProjectModel;
     private templatePath: string;
     constructor(private projectCommand: Project) {
-        this.templatePath = path.join(__dirname, 'templates');
+        this.templatePath = path.join(__dirname, '../templates');
         this.setupCli();
     }
     setupCli() {
