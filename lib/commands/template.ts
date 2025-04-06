@@ -59,14 +59,13 @@ export class Template {
     }
   }
   async codeTemplate() {
-    // Create necessary directories
+  
     await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
     await fs.ensureDir(path.join(this.projectPath, "src/models"));
     await fs.ensureDir(path.join(this.projectPath, "src/services"));
     await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
     await fs.ensureDir(path.join(this.projectPath, "src/routes"));
     
-    // Write middleware file
     await fs.writeFile(
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
@@ -77,7 +76,6 @@ export class Template {
     
     // Generate files for each model
     for (const model of this.models) {
-      // Generate model file
       const modelContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/model-template.ts"),
@@ -93,7 +91,6 @@ export class Template {
         modelContent
       );
       
-      // Generate service file
       const serviceContent = await ejs.render(
         await fs.readFile(path.join(this.projectPath, 'templates/service-template.ts'), 'utf-8'),
         { model }
