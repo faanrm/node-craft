@@ -78,12 +78,13 @@ export class Prisma {
 
     try {
       await fs.writeFile(
-        path.join(this.projectPath, "prisma", "schema.prisma"),
-        schemaContent,
+        path.join(this.projectPath, 'prisma', 'schema.prisma'),
+        schemaContent
       );
-      console.log("Schema generated successfully.");
+      console.log('Schema generated successfully.');
     } catch (error) {
-      console.error("Error generating schema:", error);
+      console.error('Error generating schema:', error);
+      throw error;
     }
   }
 }

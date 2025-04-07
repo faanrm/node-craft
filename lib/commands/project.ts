@@ -1,53 +1,63 @@
 import inquirer from "inquirer";
 import path from "path";
 import fs from "fs-extra";
-import type { Package } from "./package";
-import type { Prisma } from "./prisma";
+import { Package } from "./package";
+import  { Prisma } from "./prisma";
 import { execSync } from "child_process";
 import chalk from "chalk";
-import type { Template } from "./template";
-import type { warn } from "console";
+import  { Template } from "./template";
+
 export class Project {
-  private projectPath!: string;
+  //private projectPath!: string;
   constructor(
     private packageService: Package,
     private prismaService: Prisma,
     private templateService: Template,
-    projectPath: string,
-  ) {
-    this.projectPath = projectPath;
-  }
-  async createProject() {
-    const projectDetails = await inquirer.prompt([
-      {
-        type: "input",
-        name: "projectName",
-        message: "Enter project name",
-        default: "node-craft-project",
-      },
-      {
-        type: "confirm",
-        name: "createModels",
-        message: "Do you want to create models ?",
-        default: true,
-      },
-    ]);
-    this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
-    await this.generateProjectStructure();
-    let models : any = [];
-    if (projectDetails.createModels) {
+    private projectPath: string
+  ) { }
+async createProject() {
+  const projectDetails = await inquirer.prompt([
+    {
+      type: "input",
+      name: "projectName",
+      message: "Enter project name",
+      default: "node-craft-project",
+    },
+    {
+      type: "confirm",
+      name: "createModels",
+      message: "Do you want to create models ?",
+      default: true,
+    },
+  ]);
+  
+  this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
+  
+  await fs.ensureDir(this.projectPath);
+  
+  this.packageService = new Package(this.projectPath);
+  this.prismaService = new Prisma(this.projectPath);
+  this.templateService = new Template(this.projectPath);
+  
+  await this.generateProjectStructure();
+  
+  let models : any = [];
+  if (projectDetails.createModels){
+    try {
       models = await this.prismaService.generatePrismaModels();
+    } catch (error) {
+      console.error('Error generating Prisma models:', error);
     }
-    await this.templateService.setupTemplate();
-    await this.templateService.setModels(models);
-    await this.templateService.codeTemplate();
-
-    await this.setupProjectDependencies();
-    console.log(
-      chalk.green(`✅ Projet ${projectDetails.projectName} créé avec succès!`),
-    );
-    console.log(chalk.blue(`🧪 Validation Zod intégrée dans le projet!`));
   }
+  
+  await this.templateService.setupTemplate();
+  await this.templateService.setModels(models);
+  await this.templateService.codeTemplate();
+
+  await this.setupProjectDependencies();
+  console.log(chalk.green(`✅ Project ${projectDetails.projectName} created successfully!`));
+  console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
+}
   async generateProjectStructure() {
     const directory = [
       "src/models",
