@@ -73,7 +73,6 @@ export class Template {
       ),
     );
 
-    // Generate files for each model
     for (const model of this.models) {
       const modelContent = await ejs.render(
         await fs.readFile(
@@ -108,7 +107,6 @@ export class Template {
         serviceContent,
       );
 
-      // Generate controller file
       const controllerContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/controller-template.ts"),
@@ -124,7 +122,6 @@ export class Template {
         controllerContent,
       );
 
-      // Generate route file
       const routeContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/routes-template.ts"),
@@ -155,6 +152,7 @@ export class Template {
       path.join(this.projectPath, "src/index.ts"),
       mainContent,
     );
+    await fs.remove(path.join(this.projectPath, "templates"));
   }
 
   async getZodValidator(field: ModelField) {

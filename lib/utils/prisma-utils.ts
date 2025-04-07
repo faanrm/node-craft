@@ -1,7 +1,7 @@
 import type { ModelField } from "../models/model-field";
 import inquirer from "inquirer";
 
-export const stringValidations = async (field: ModelField) => {
+/*export const stringValidations = async (field: ModelField) => {
     const response = await inquirer.prompt([
         { type: 'confirm', name: 'hasMinLength', message: 'Has min length?', default: false },
         { type: 'number', name: 'minLength', message: 'Minimum length:', when: (answers) => answers.hasMinLength },
@@ -105,10 +105,8 @@ export const promptModelName = async (): Promise<string | null> => {
         { type: 'input', name: 'modelName', message: 'Enter model name' }
     ]);
     return response.modelName || null;
-}
-/*
-import type { ModelField } from "../models/model-field";
-import inquirer from "inquirer";
+}*/
+
 
 export const stringValidations = async (field: ModelField) => {
     const response = await inquirer.prompt([
@@ -183,4 +181,3 @@ export const promptModelName = async (): Promise<string | null> => {
     ]);
     return response.modelName || null;
 }
-*/
