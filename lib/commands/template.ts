@@ -6,8 +6,8 @@ import type { ModelField } from "../models/model-field";
 export class Template {
   private projectPath!: string;
 
-  constructor (projectPath : string) {
-    this.projectPath = projectPath
+  constructor(projectPath: string) {
+    this.projectPath = projectPath;
   }
   private models: ProjectModel[] = [];
   async setupTemplate() {
@@ -59,13 +59,12 @@ export class Template {
     }
   }
   async codeTemplate() {
-  
     await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
     await fs.ensureDir(path.join(this.projectPath, "src/models"));
     await fs.ensureDir(path.join(this.projectPath, "src/services"));
     await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
     await fs.ensureDir(path.join(this.projectPath, "src/routes"));
-    
+
     await fs.writeFile(
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
@@ -73,7 +72,7 @@ export class Template {
         "utf-8",
       ),
     );
-    
+
     // Generate files for each model
     for (const model of this.models) {
       const modelContent = await ejs.render(
@@ -87,58 +86,82 @@ export class Template {
         },
       );
       await fs.writeFile(
-        path.join(this.projectPath, `src/models/${model.name.toLowerCase()}.model.ts`),
-        modelContent
+        path.join(
+          this.projectPath,
+          `src/models/${model.name.toLowerCase()}.model.ts`,
+        ),
+        modelContent,
       );
-      
+
       const serviceContent = await ejs.render(
-        await fs.readFile(path.join(this.projectPath, 'templates/service-template.ts'), 'utf-8'),
-        { model }
+        await fs.readFile(
+          path.join(this.projectPath, "templates/service-template.ts"),
+          "utf-8",
+        ),
+        { model },
       );
       await fs.writeFile(
-        path.join(this.projectPath, `src/services/${model.name.toLowerCase()}.service.ts`),
-        serviceContent
+        path.join(
+          this.projectPath,
+          `src/services/${model.name.toLowerCase()}.service.ts`,
+        ),
+        serviceContent,
       );
-  
+
       // Generate controller file
       const controllerContent = await ejs.render(
-        await fs.readFile(path.join(this.projectPath, 'templates/controller-template.ts'), 'utf-8'),
-        { model }
+        await fs.readFile(
+          path.join(this.projectPath, "templates/controller-template.ts"),
+          "utf-8",
+        ),
+        { model },
       );
       await fs.writeFile(
-        path.join(this.projectPath, `src/controllers/${model.name.toLowerCase()}.controller.ts`),
-        controllerContent
+        path.join(
+          this.projectPath,
+          `src/controllers/${model.name.toLowerCase()}.controller.ts`,
+        ),
+        controllerContent,
       );
-  
+
       // Generate route file
       const routeContent = await ejs.render(
-        await fs.readFile(path.join(this.projectPath, 'templates/routes-template.ts'), 'utf-8'),
-        { model }
+        await fs.readFile(
+          path.join(this.projectPath, "templates/routes-template.ts"),
+          "utf-8",
+        ),
+        { model },
       );
       await fs.writeFile(
-        path.join(this.projectPath, `src/routes/${model.name.toLowerCase()}.routes.ts`),
-        routeContent
+        path.join(
+          this.projectPath,
+          `src/routes/${model.name.toLowerCase()}.routes.ts`,
+        ),
+        routeContent,
       );
     }
-  
+
     const mainContent = await ejs.render(
-      await fs.readFile(path.join(__dirname, '../templates/main-template.ejs'), 'utf-8'),
+      await fs.readFile(
+        path.join(__dirname, "../templates/main-template.ejs"),
+        "utf-8",
+      ),
       {
         models: this.models,
-        projectName: path.basename(this.projectPath)
-      }
+        projectName: path.basename(this.projectPath),
+      },
     );
     await fs.writeFile(
-      path.join(this.projectPath, 'src/index.ts'),
-      mainContent
+      path.join(this.projectPath, "src/index.ts"),
+      mainContent,
     );
   }
 
   async getZodValidator(field: ModelField) {
-    let validator = 'z';
+    let validator = "z";
     switch (field.type) {
-      case 'String':
-        validator += '.string()';
+      case "String":
+        validator += ".string()";
 
         if (field.minLength !== undefined) {
           validator += `.min(${field.minLength}, { message: "Must be at least ${field.minLength} characters" })`;
@@ -150,8 +173,8 @@ export class Template {
           validator += `.regex(new RegExp("${field.pattern}"), { message: "Invalid format" })`;
         }
         break;
-      case 'Int':
-        validator += '.number().int()';
+      case "Int":
+        validator += ".number().int()";
 
         // Add number validations
         if (field.min !== undefined) {
@@ -161,8 +184,8 @@ export class Template {
           validator += `.max(${field.max}, { message: "Must be at most ${field.max}" })`;
         }
         break;
-      case 'Float':
-        validator += '.number()';
+      case "Float":
+        validator += ".number()";
 
         // Add number validations
         if (field.min !== undefined) {
@@ -172,31 +195,34 @@ export class Template {
           validator += `.max(${field.max}, { message: "Must be at most ${field.max}" })`;
         }
         break;
-      case 'Boolean':
-        validator += '.boolean()';
+      case "Boolean":
+        validator += ".boolean()";
         break;
-      case 'DateTime':
-        validator += '.date()';
+      case "DateTime":
+        validator += ".date()";
         break;
-      case 'Json':
-        validator += '.record(z.any())';
+      case "Json":
+        validator += ".record(z.any())";
         break;
       default:
         // For relations or custom types
         if (field.isRelation) {
-          validator += '.object({})'; // Placeholder for relation
+          validator += ".object({})"; // Placeholder for relation
         } else {
-          validator += '.any()';
+          validator += ".any()";
         }
     }
 
     // Add modifiers
     if (field.isOptional) {
-      validator += '.optional()';
+      validator += ".optional()";
     } else {
-      validator += '.required()';
+      validator += ".required()";
     }
 
     return validator;
+  }
+  setModels(models: ProjectModel[]) {
+    this.models = models;
   }
 }

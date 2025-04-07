@@ -6,15 +6,16 @@ import type { Prisma } from "./prisma";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import type { Template } from "./template";
+import type { warn } from "console";
 export class Project {
   private projectPath!: string;
   constructor(
     private packageService: Package,
     private prismaService: Prisma,
-    private templateService : Template,
-    projectPath : string
-  ) { 
-    this.projectPath = projectPath
+    private templateService: Template,
+    projectPath: string,
+  ) {
+    this.projectPath = projectPath;
   }
   async createProject() {
     const projectDetails = await inquirer.prompt([
@@ -33,17 +34,19 @@ export class Project {
     ]);
     this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
     await this.generateProjectStructure();
-    if (projectDetails.createModels){
-      await this.prismaService.generatePrismaModels();  
+    let models : any = [];
+    if (projectDetails.createModels) {
+      models = await this.prismaService.generatePrismaModels();
     }
     await this.templateService.setupTemplate();
-  
+    await this.templateService.setModels(models);
     await this.templateService.codeTemplate();
 
     await this.setupProjectDependencies();
-    console.log(chalk.green(`✅ Projet ${projectDetails.projectName} créé avec succès!`));
+    console.log(
+      chalk.green(`✅ Projet ${projectDetails.projectName} créé avec succès!`),
+    );
     console.log(chalk.blue(`🧪 Validation Zod intégrée dans le projet!`));
-
   }
   async generateProjectStructure() {
     const directory = [
@@ -75,10 +78,9 @@ dist/
 `;
 
     await fs.writeFile(
-      path.join(this.projectPath, '.gitignore'),
-      gitignoreContent
+      path.join(this.projectPath, ".gitignore"),
+      gitignoreContent,
     );
-    
   }
 
   async createEnvFile() {
@@ -86,19 +88,16 @@ dist/
 DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"
 `;
 
-    await fs.writeFile(
-      path.join(this.projectPath, '.env'),
-      envContent
-    );
+    await fs.writeFile(path.join(this.projectPath, ".env"), envContent);
   }
 
   async setupProjectDependencies() {
     await fs.ensureDir(this.projectPath);
     execSync(`cd ${this.projectPath} && git init`);
 
-    console.log(chalk.yellow('To install dependencies, run:'));
-    console.log(chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`));
+    console.log(chalk.yellow("To install dependencies, run:"));
+    console.log(
+      chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`),
+    );
   }
 }
-
-
