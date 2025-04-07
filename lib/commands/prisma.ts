@@ -39,7 +39,6 @@ export class Prisma {
     await this.generatePrismaSchema();
     return this.models;
   }
-  // In lib/commands/prisma.ts
   async generatePrismaSchema() {
     await fs.ensureDir(path.join(this.projectPath, 'prisma'));
 
@@ -54,11 +53,9 @@ export class Prisma {
         let fieldLine = `  ${field.name} `;
 
         if (field.isRelation) {
-          // Handle relation fields
           if (field.relationType === 'OneToOne') {
             fieldLine += `${field.relationModel}? @relation(fields: [${field.name}Id], references: [id])\n`;
             schemaContent += fieldLine;
-            // Add the foreign key field
             schemaContent += `  ${field.name}Id String? @unique\n`;
             return;
           } else if (field.relationType === 'OneToMany') {
@@ -71,7 +68,6 @@ export class Prisma {
             return;
           }
         } else {
-          // Handle normal fields
           fieldLine += field.type;
           if (field.isOptional) fieldLine += '?';
           if (field.isUnique) fieldLine += ' @unique';

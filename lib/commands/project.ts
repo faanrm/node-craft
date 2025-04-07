@@ -65,7 +65,7 @@ export class Project {
       "src/routes",
       "src/services",
       "src/utils",
-      "src/middlewares",
+     // "src/middlewares",
       "src/validators",
       "prisma",
     ];
