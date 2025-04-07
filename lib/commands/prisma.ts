@@ -39,41 +39,47 @@ export class Prisma {
     await this.generatePrismaSchema();
     return this.models;
   }
-
+  // In lib/commands/prisma.ts
   async generatePrismaSchema() {
-    let schemaContent =
-      'generator client {\n  provider = "prisma-client-js"\n}\n\n';
-    schemaContent +=
-      'datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}\n\n';
+    await fs.ensureDir(path.join(this.projectPath, 'prisma'));
+
+    let schemaContent = "generator client {\n  provider = \"prisma-client-js\"\n}\n\n";
+    schemaContent += "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n";
 
     this.models.forEach((model) => {
       schemaContent += `model ${model.name} {\n`;
       schemaContent += `  id String @id @default(uuid())\n`;
 
-      model.fields.forEach((field) => {
+      model.fields.forEach(field => {
         let fieldLine = `  ${field.name} `;
 
         if (field.isRelation) {
-          switch (field.relationType) {
-            case "OneToOne":
-              fieldLine += `${field.relationModel}?`;
-              break;
-            case "OneToMany":
-            case "ManyToMany":
-              fieldLine += `${field.relationModel}[]`;
-              break;
+          // Handle relation fields
+          if (field.relationType === 'OneToOne') {
+            fieldLine += `${field.relationModel}? @relation(fields: [${field.name}Id], references: [id])\n`;
+            schemaContent += fieldLine;
+            // Add the foreign key field
+            schemaContent += `  ${field.name}Id String? @unique\n`;
+            return;
+          } else if (field.relationType === 'OneToMany') {
+            fieldLine += `${field.relationModel}[] @relation("${model.name}To${field.relationModel}")\n`;
+            schemaContent += fieldLine;
+            return;
+          } else if (field.relationType === 'ManyToMany') {
+            fieldLine += `${field.relationModel}[] @relation("${model.name}To${field.relationModel}")\n`;
+            schemaContent += fieldLine;
+            return;
           }
         } else {
+          // Handle normal fields
           fieldLine += field.type;
+          if (field.isOptional) fieldLine += '?';
+          if (field.isUnique) fieldLine += ' @unique';
+          schemaContent += fieldLine + '\n';
         }
-
-        if (field.isOptional) fieldLine += "?";
-        if (field.isUnique) fieldLine += " @unique";
-
-        schemaContent += fieldLine + "\n";
       });
 
-      schemaContent += "}\n\n";
+      schemaContent += '}\n\n';
     });
 
     try {
@@ -86,5 +92,7 @@ export class Prisma {
       console.error('Error generating schema:', error);
       throw error;
     }
+
+    return this.models;
   }
 }

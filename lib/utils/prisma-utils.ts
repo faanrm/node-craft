@@ -33,34 +33,66 @@ export const numberValidations = async (field: ModelField) => {
 }
 export const promptFieldDetails = async (): Promise<ModelField | null> => {
     try {
-        const fieldResponse = await inquirer.prompt([
-            { type: 'input', name: 'fieldName', message: 'Enter field name' },
-            {
-                type: 'list', name: 'fieldType', message: 'Type of field',
-                choices: ['String', 'Int', 'Float', 'Boolean', 'DateTime', 'Json', 'Bytes', 'Relation', 'Enum'],
-                when: (answers) => answers.fieldName !== ''
-            },
-            { type: 'confirm', name: 'isOptional', message: 'Is field optional?', when: (answers) => answers.fieldName !== '' },
-            { type: 'confirm', name: 'isUnique', message: 'Is field unique?', when: (answers) => answers.fieldName !== '' },
-            {
-                type: 'list', name: 'relationType', message: 'Relation type',
-                choices: ['OneToOne', 'OneToMany', 'ManyToMany'],
-                when: (answers) => answers.fieldType === 'Relation'
-            },
-            { type: 'input', name: 'relationModel', message: 'Relation model', when: (answers) => answers.fieldType === 'Relation' }
+        const nameResponse = await inquirer.prompt([
+            { type: 'input', name: 'fieldName', message: 'Enter field name (leave empty to finish)' }
         ]);
 
-        if (!fieldResponse.fieldName) return null;
+        if (!nameResponse.fieldName) return null;
+
+        const typeResponse = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'fieldType',
+                message: 'Type of field',
+                choices: ['String', 'Int', 'Float', 'Boolean', 'DateTime', 'Json', 'Relation']
+            }
+        ]);
+
+        let relationType: string | undefined;
+        let relationModel: string | undefined;
+
+        if (typeResponse.fieldType === 'Relation') {
+            const relationResponse = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'relationType',
+                    message: 'Relation type',
+                    choices: ['OneToOne', 'OneToMany', 'ManyToMany']
+                },
+                {
+                    type: 'input',
+                    name: 'relationModel',
+                    message: 'Related model name',
+                    validate: (input: string) => input ? true : 'Related model name is required'
+                }
+            ]);
+            relationType = relationResponse.relationType;
+            relationModel = relationResponse.relationModel;
+        }
+
+        const commonResponse = await inquirer.prompt([
+            { type: 'confirm', name: 'isOptional', message: 'Is field optional?', default: false },
+            { type: 'confirm', name: 'isUnique', message: 'Is field unique?', default: false }
+        ]);
 
         const field: ModelField = {
-            name: fieldResponse.fieldName,
-            type: fieldResponse.fieldType === 'Relation' ? fieldResponse.relationModel : fieldResponse.fieldType,
-            isOptional: fieldResponse.isOptional || false,
-            isUnique: fieldResponse.isUnique || false,
-            isRelation: fieldResponse.fieldType === 'Relation',
-            relationType: fieldResponse.relationType,
-            relationModel: fieldResponse.relationModel || null
+            name: nameResponse.fieldName,
+            type: typeResponse.fieldType,
+            isOptional: commonResponse.isOptional,
+            isUnique: commonResponse.isUnique,
+            isRelation: typeResponse.fieldType === 'Relation'
         };
+
+        if (field.isRelation) {
+            field.relationType = relationType as 'OneToOne' | 'OneToMany' | 'ManyToMany';
+            field.relationModel = relationModel;
+        }
+
+        if (field.type === 'String') {
+            await stringValidations(field);
+        } else if (field.type === 'Int' || field.type === 'Float') {
+            await numberValidations(field);
+        }
 
         return field;
     } catch (error) {
