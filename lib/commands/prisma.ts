@@ -41,20 +41,14 @@ export class Prisma {
   }
   async generatePrismaSchema() {
     await fs.ensureDir(path.join(this.projectPath, 'prisma'));
-
-    await fs.ensureDir(path.join(this.projectPath, 'prisma'));
-
+  
     let schemaContent = "generator client {\n  provider = \"prisma-client-js\"\n}\n\n";
-
+  
     let dbProvider, dbUrlEnvVar;
     switch (this.database) {
       case "MySQL":
         dbProvider = "mysql";
         dbUrlEnvVar = "DATABASE_URL=\"mysql://username:password@localhost:3306/mydatabase\"";
-        break;
-      case "SQLite":
-        dbProvider = "sqlite";
-        dbUrlEnvVar = "DATABASE_URL=\"file:./dev.db\"";
         break;
       case "MongoDB":
         dbProvider = "mongodb";
@@ -64,16 +58,21 @@ export class Prisma {
         dbProvider = "postgresql";
         dbUrlEnvVar = "DATABASE_URL=\"postgresql://username:password@localhost:5432/mydatabase?schema=public\"";
     }
-
+  
     schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
-    await fs.writeFile(path.join(this.projectPath, ".env"), dbUrlEnvVar);
+    
+    const envPath = path.join(this.projectPath, ".env");
+    if (!await fs.pathExists(envPath) || (await fs.readFile(envPath, 'utf-8')).trim() === '') {
+      await fs.writeFile(envPath, dbUrlEnvVar);
+    }
+  
     this.models.forEach((model) => {
       schemaContent += `model ${model.name} {\n`;
       schemaContent += `  id String @id @default(uuid())\n`;
-
+  
       model.fields.forEach(field => {
         let fieldLine = `  ${field.name} `;
-
+  
         if (field.isRelation) {
           if (field.relationType === 'OneToOne') {
             fieldLine += `${field.relationModel}? @relation(fields: [${field.name}Id], references: [id])\n`;
@@ -96,10 +95,10 @@ export class Prisma {
           schemaContent += fieldLine + '\n';
         }
       });
-
+  
       schemaContent += '}\n\n';
     });
-
+  
     try {
       await fs.writeFile(
         path.join(this.projectPath, 'prisma', 'schema.prisma'),
@@ -110,7 +109,10 @@ export class Prisma {
       console.error('Error generating schema:', error);
       throw error;
     }
-
+  
     return this.models;
+  }
+  setModels(models: ProjectModel[]) {
+    this.models = models;
   }
 }

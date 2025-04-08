@@ -10,12 +10,14 @@ import { Authentification } from "./authentification";
 
 export class Project {
   constructor(
-    private authService : Authentification,
+    private authService: Authentification,
     private packageService: Package,
     private prismaService: Prisma,
     private templateService: Template,
     private projectPath: string,
-  ) {}
+  ) {
+    this.authService = new Authentification(this.projectPath);
+  }
   async createProject() {
     const projectDetails = await inquirer.prompt([
       {
@@ -28,7 +30,7 @@ export class Project {
         type: "list",
         name: "database",
         message: "Select a database",
-        choices: ["PostgreSQL", "MySQL", "SQLite", "MongoDB"],
+        choices: ["PostgreSQL", "MySQL", "MongoDB"],
         default: "PostgreSQL",
       },
       {
@@ -53,6 +55,7 @@ export class Project {
     this.prismaService = new Prisma(this.projectPath, projectDetails.database);
     this.templateService = new Template(this.projectPath);
     this.authService = new Authentification(this.projectPath);
+
     await this.generateProjectStructure();
 
     let models: any = [];
@@ -63,14 +66,19 @@ export class Project {
         console.error("Error generating Prisma models:", error);
       }
     }
+
     if (projectDetails.authentification) {
       try {
         const userModel = await this.authService.setupAuthentication();
-        models.push(userModel);  
+        models.push(userModel);
+
+        await this.prismaService.setModels(models);
+        await this.prismaService.generatePrismaSchema();
       } catch (error) {
-        console.error('Error setting up authentication:', error);
+        console.error("Error setting up authentication:", error);
       }
     }
+
     await this.templateService.setupTemplate();
     await this.templateService.setModels(models);
     await this.templateService.codeTemplate();

@@ -7,10 +7,11 @@ export class Authentification {
   constructor(private projectPath: string) {}
 
   async setupAuthentication() {
-    console.log("Setting up authentication...");
+    console.log("Setting up authentification...");
     
-    const userModel: ProjectModel = {
+    const userModel = {
       name: "User",
+      handledByAuth : true,
       fields: [
         {
           name: "email",
@@ -36,11 +37,10 @@ export class Authentification {
           isOptional: false, 
           isUnique: false,
         }
-      ]
+      ],
     };
 
     try {
-      await fs.ensureDir(path.join(this.projectPath, "src/auth"));
       await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
       await fs.ensureDir(path.join(this.projectPath, "src/models"));
       
