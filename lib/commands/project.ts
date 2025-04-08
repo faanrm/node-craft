@@ -51,7 +51,7 @@ export class Project {
 
     this.packageService = new Package(this.projectPath);
     this.prismaService = new Prisma(this.projectPath, projectDetails.database);
-    this.templateService = new Template(this.projectPath);
+    this.templateService = new Template(this.projectPath, projectDetails.authentification);
     this.authService = new Authentification(this.projectPath);
     await this.generateProjectStructure();
 

@@ -51,7 +51,7 @@ export class Authentification {
 
       await this.updateEnvWithJwtSecret();
 
-      await this.updateMainFile();
+     // await this.updateMainFile();
 
       console.log("Authentication setup completed successfully");
       return userModel;
@@ -134,7 +134,7 @@ export class Authentification {
     await fs.writeFile(envPath, updatedEnvContent);
   }
 
-  private async updateMainFile() {
+  /*private async updateMainFile() {
     const indexPath = path.join(this.projectPath, "src/index.ts");
 
     if (await fs.pathExists(indexPath)) {
@@ -156,6 +156,6 @@ export class Authentification {
         await fs.writeFile(indexPath, mainContent);
       }
     }
-  }
+  }*/
 }
 

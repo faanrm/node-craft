@@ -5,9 +5,10 @@ import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
 export class Template {
   private projectPath!: string;
-
-  constructor(projectPath: string) {
+  private isAuth! : boolean 
+  constructor(projectPath: string,isAuth : boolean = false) {
     this.projectPath = projectPath;
+    this.isAuth = isAuth
   }
   private models: ProjectModel[] = [];
   async setupTemplate() {
@@ -73,7 +74,7 @@ export class Template {
     );
 
     for (const model of this.models) {
-      if (model.name === "User") {
+      if (model.name === "User" && this.isAuth) {
         continue;
       }
 
