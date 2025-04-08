@@ -73,6 +73,10 @@ export class Template {
     );
 
     for (const model of this.models) {
+      if (model.name === "User") {
+        continue;
+      }
+
       const modelContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/model-template.ts"),
@@ -202,15 +206,13 @@ export class Template {
         validator += ".record(z.any())";
         break;
       default:
-        // For relations or custom types
         if (field.isRelation) {
-          validator += ".object({})"; // Placeholder for relation
+          validator += ".object({})"; 
         } else {
           validator += ".any()";
         }
     }
 
-    // Add modifiers
     if (field.isOptional) {
       validator += ".optional()";
     } else {
