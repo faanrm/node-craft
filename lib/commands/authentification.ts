@@ -3,12 +3,12 @@ import path from "path";
 import type { ProjectModel } from "../models/project-model";
 
 export class Authentification {
-  constructor(private projectPath: string) {}
+  constructor(private projectPath: string) { }
 
   async setupAuthentication() {
     console.log("Setting up authentication...");
 
-    const userModel: ProjectModel & { handledByAuth?: boolean } = {
+    const userModel: ProjectModel = {
       name: "User",
       fields: [
         {
@@ -36,7 +36,6 @@ export class Authentification {
           isUnique: false,
         },
       ],
-      handledByAuth: true,
     };
 
     try {

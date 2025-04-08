@@ -63,16 +63,17 @@ export class Project {
         console.error("Error generating Prisma models:", error);
       }
     }
-    
+
     if (projectDetails.authentification) {
       try {
         const userModel = await this.authService.setupAuthentication();
-        models.push(userModel); 
+        await this.prismaService.addUserModel(userModel);
+        models.push(userModel);
       } catch (error) {
         console.error('Error setting up authentication:', error);
       }
     }
-    
+
     await this.templateService.setupTemplate();
     await this.templateService.setModels(models);
     await this.templateService.codeTemplate();
@@ -85,7 +86,7 @@ export class Project {
     );
     console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
   }
-  
+
   async generateProjectStructure() {
     const directories = [
       "src/models",
@@ -108,7 +109,7 @@ export class Project {
     await this.createNodemonConfig();
     await this.packageService.createTsConfig();
   }
-  
+
   async createGitignore() {
     const gitignoreContent = `
 node_modules/
@@ -141,7 +142,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=pu
       chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`),
     );
   }
-  
+
   async createNodemonConfig() {
     const nodemonConfig = {
       watch: ["src"],
@@ -157,3 +158,4 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=pu
     );
   }
 }
+

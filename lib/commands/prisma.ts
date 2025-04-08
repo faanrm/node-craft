@@ -115,4 +115,14 @@ export class Prisma {
   setModels(models: ProjectModel[]) {
     this.models = models;
   }
+  async addUserModel(userModel: ProjectModel) {
+    const existingUserModelIndex = this.models.findIndex(m => m.name === "User");
+    if (existingUserModelIndex >= 0) {
+      this.models[existingUserModelIndex] = userModel;
+    } else {
+      this.models.push(userModel);
+    }
+    
+    await this.generatePrismaSchema();
+  }
 }
