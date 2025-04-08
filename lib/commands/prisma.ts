@@ -12,7 +12,7 @@ export class Prisma {
   private models: ProjectModel[] = [];
   private projectPath: string;
 
-  constructor(projectPath: string) {
+  constructor(projectPath: string, private database: string = "") {
     this.projectPath = projectPath;
   }
 
@@ -42,9 +42,31 @@ export class Prisma {
   async generatePrismaSchema() {
     await fs.ensureDir(path.join(this.projectPath, 'prisma'));
 
-    let schemaContent = "generator client {\n  provider = \"prisma-client-js\"\n}\n\n";
-    schemaContent += "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\n";
+    await fs.ensureDir(path.join(this.projectPath, 'prisma'));
 
+    let schemaContent = "generator client {\n  provider = \"prisma-client-js\"\n}\n\n";
+
+    let dbProvider, dbUrlEnvVar;
+    switch (this.database) {
+      case "MySQL":
+        dbProvider = "mysql";
+        dbUrlEnvVar = "DATABASE_URL=\"mysql://username:password@localhost:3306/mydatabase\"";
+        break;
+      case "SQLite":
+        dbProvider = "sqlite";
+        dbUrlEnvVar = "DATABASE_URL=\"file:./dev.db\"";
+        break;
+      case "MongoDB":
+        dbProvider = "mongodb";
+        dbUrlEnvVar = "DATABASE_URL=\"mongodb://username:password@localhost:27017/mydatabase\"";
+        break;
+      default:
+        dbProvider = "postgresql";
+        dbUrlEnvVar = "DATABASE_URL=\"postgresql://username:password@localhost:5432/mydatabase?schema=public\"";
+    }
+
+    schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
+    await fs.writeFile(path.join(this.projectPath, ".env"), dbUrlEnvVar);
     this.models.forEach((model) => {
       schemaContent += `model ${model.name} {\n`;
       schemaContent += `  id String @id @default(uuid())\n`;

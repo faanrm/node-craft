@@ -6,15 +6,16 @@ import { Prisma } from "./prisma";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import { Template } from "./template";
+import { Authentification } from "./authentification";
 
 export class Project {
-  //private projectPath!: string;
   constructor(
+    private authService : Authentification,
     private packageService: Package,
     private prismaService: Prisma,
     private templateService: Template,
-    private projectPath: string
-  ) { }
+    private projectPath: string,
+  ) {}
   async createProject() {
     const projectDetails = await inquirer.prompt([
       {
@@ -22,6 +23,19 @@ export class Project {
         name: "projectName",
         message: "Enter project name",
         default: "node-craft-project",
+      },
+      {
+        type: "list",
+        name: "database",
+        message: "Select a database",
+        choices: ["PostgreSQL", "MySQL", "SQLite", "MongoDB"],
+        default: "PostgreSQL",
+      },
+      {
+        type: "confirm",
+        name: "authentification",
+        message: "Do you want to add authentication to your project ?",
+        default: false,
       },
       {
         type: "confirm",
@@ -36,9 +50,9 @@ export class Project {
     await fs.ensureDir(this.projectPath);
 
     this.packageService = new Package(this.projectPath);
-    this.prismaService = new Prisma(this.projectPath);
+    this.prismaService = new Prisma(this.projectPath, projectDetails.database);
     this.templateService = new Template(this.projectPath);
-
+    this.authService = new Authentification(this.projectPath);
     await this.generateProjectStructure();
 
     let models: any = [];
@@ -46,16 +60,27 @@ export class Project {
       try {
         models = await this.prismaService.generatePrismaModels();
       } catch (error) {
-        console.error('Error generating Prisma models:', error);
+        console.error("Error generating Prisma models:", error);
       }
     }
-
+    if (projectDetails.authentification) {
+      try {
+        const userModel = await this.authService.setupAuthentication();
+        models.push(userModel);  
+      } catch (error) {
+        console.error('Error setting up authentication:', error);
+      }
+    }
     await this.templateService.setupTemplate();
     await this.templateService.setModels(models);
     await this.templateService.codeTemplate();
 
     await this.setupProjectDependencies();
-    console.log(chalk.green(`✅ Project ${projectDetails.projectName} created successfully!`));
+    console.log(
+      chalk.green(
+        `✅ Project ${projectDetails.projectName} created successfully!`,
+      ),
+    );
     console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
   }
   async generateProjectStructure() {
@@ -65,7 +90,7 @@ export class Project {
       "src/routes",
       "src/services",
       "src/utils",
-     // "src/middlewares",
+      // "src/middlewares",
       "src/validators",
       "prisma",
     ];
@@ -114,16 +139,16 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=pu
   }
   async createNodemonConfig() {
     const nodemonConfig = {
-      "watch": ["src"],
-      "ext": "ts",
-      "ignore": ["src/**/*.spec.ts"],
-      "exec": "ts-node src/index.ts"
+      watch: ["src"],
+      ext: "ts",
+      ignore: ["src/**/*.spec.ts"],
+      exec: "ts-node src/index.ts",
     };
 
     await fs.writeJSON(
-      path.join(this.projectPath, 'nodemon.json'),
+      path.join(this.projectPath, "nodemon.json"),
       nodemonConfig,
-      { spaces: 2 }
+      { spaces: 2 },
     );
   }
 }
