@@ -11,7 +11,6 @@ export class Template {
   }
   private models: ProjectModel[] = [];
   async setupTemplate() {
-    //create templates if !exist
     const templateDir = path.join(this.projectPath, "templates");
     await fs.ensureDir(templateDir);
     const templates = [
