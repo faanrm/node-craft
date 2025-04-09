@@ -9,12 +9,19 @@
     "migrate": "prisma db push"
   },
   "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "ejs": "^3.1.10",
     "express": "^4.18.2",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^12.5.2",
     "prisma": "^5.2.0",
     "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@types/ejs": "^3.1.5",
     "@types/express": "^4.17.17",
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.6.0",
     "nodemon": "^3.0.1",
     "typescript": "^5.2.2"
