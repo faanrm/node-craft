@@ -20,7 +20,7 @@ export class Authentification {
         {
           name: "password",
           type: "String",
-          isOptional: false,
+          isOptional: false, 
           isUnique: false,
         },
         {
@@ -75,7 +75,6 @@ export class Authentification {
         "utf-8",
       ),
     );
-
     await fs.writeFile(
       path.join(this.projectPath, "src/services/auth.service.ts"),
       await fs.readFile(
