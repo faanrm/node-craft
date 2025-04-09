@@ -5,8 +5,8 @@ import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
 export class Template {
   private projectPath!: string;
-  private isAuth! : boolean 
-  constructor(projectPath: string,isAuth : boolean = false) {
+  private isAuth!: boolean
+  constructor(projectPath: string, isAuth: boolean = false) {
     this.projectPath = projectPath;
     this.isAuth = isAuth
   }
@@ -75,6 +75,50 @@ export class Template {
 
     for (const model of this.models) {
       if (model.name === "User" && this.isAuth) {
+        const serviceContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/service-template.ts"),
+            "utf-8",
+          ),
+          { model },
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/services/${model.name.toLowerCase()}.service.ts`,
+          ),
+          serviceContent,
+        );
+
+        const controllerContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/controller-template.ts"),
+            "utf-8",
+          ),
+          { model },
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/controllers/${model.name.toLowerCase()}.controller.ts`,
+          ),
+          controllerContent,
+        );
+
+        const routeContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/routes-template.ts"),
+            "utf-8",
+          ),
+          { model },
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/routes/${model.name.toLowerCase()}.routes.ts`,
+          ),
+          routeContent,
+        );
         continue;
       }
 
@@ -208,7 +252,7 @@ export class Template {
         break;
       default:
         if (field.isRelation) {
-          validator += ".object({})"; 
+          validator += ".object({})";
         } else {
           validator += ".any()";
         }

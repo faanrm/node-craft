@@ -50,7 +50,7 @@ export class Authentification {
       await this.updatePackageJson();
 
       await this.updateEnvWithJwtSecret();
-      await this.updateMainFile();
+
       console.log("Authentication setup completed successfully");
       return userModel;
     } catch (error) {
@@ -130,29 +130,6 @@ export class Authentification {
       envContent + "\nJWT_SECRET=your_jwt_secret_key_here\nJWT_EXPIRES_IN=7d\n";
 
     await fs.writeFile(envPath, updatedEnvContent);
-  }
-  private async updateMainFile() {
-    const indexPath = path.join(this.projectPath, "src/index.ts");
-
-    if (await fs.pathExists(indexPath)) {
-      let mainContent = await fs.readFile(indexPath, "utf-8");
-
-      if (!mainContent.includes("import authRouter")) {
-        mainContent = mainContent.replace(
-          "import express from 'express';",
-          "import express from 'express';\nimport authRouter from './routes/auth.routes';",
-        );
-
-        if (!mainContent.includes("app.use('/api/auth'")) {
-          mainContent = mainContent.replace(
-            "app.use(morgan('dev'));",
-            "app.use(morgan('dev'));\n\n// Auth routes\napp.use('/api/auth', authRouter);",
-          );
-        }
-
-        await fs.writeFile(indexPath, mainContent);
-      }
-    }
   }
 }
 
