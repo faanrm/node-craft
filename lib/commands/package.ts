@@ -20,11 +20,16 @@ export class Package {
                 "express": "^4.18.2",
                 "prisma": "^5.2.0",
                 "zod": "^3.22.2",
+                "helmet": "^8.1.0",
+                "morgan": "^1.10.0",
             },
             devDependencies: {
                 "@types/express": "^4.17.17",
                 "@types/node": "^20.6.0",
                 "nodemon": "^3.0.1",
+                "@types/jsonwebtoken": "^9.0.9",
+                "@types/morgan": "^1.9.9",
+                "ts-node": "^10.9.2",
                 "typescript": "^5.2.2"
             }
         }
