@@ -5,10 +5,10 @@ import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
 export class Template {
   private projectPath!: string;
-  private isAuth!: boolean
+  private isAuth!: boolean;
   constructor(projectPath: string, isAuth: boolean = false) {
     this.projectPath = projectPath;
-    this.isAuth = isAuth
+    this.isAuth = isAuth;
   }
   private models: ProjectModel[] = [];
   async setupTemplate() {
@@ -19,42 +19,42 @@ export class Template {
         name: "model-template.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/zod-model-template.ejs"),
-          "utf-8",
+          "utf-8"
         ),
       },
       {
         name: "service-template.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/zod-service-template.ejs"),
-          "utf-8",
+          "utf-8"
         ),
       },
       {
         name: "controller-template.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/zod-controller-template.ejs"),
-          "utf-8",
+          "utf-8"
         ),
       },
       {
         name: "routes-template.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/routing-template.ejs"),
-          "utf-8",
+          "utf-8"
         ),
       },
       {
         name: "validator-middleware.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/zod-middleware.ts"),
-          "utf-8",
+          "utf-8"
         ),
       },
     ];
     for (const template of templates) {
       await fs.writeFile(
         path.join(templateDir, template.name),
-        template.content,
+        template.content
       );
     }
   }
@@ -69,8 +69,8 @@ export class Template {
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
         path.join(this.projectPath, "templates/validator-middleware.ts"),
-        "utf-8",
-      ),
+        "utf-8"
+      )
     );
 
     for (const model of this.models) {
@@ -78,46 +78,46 @@ export class Template {
         const serviceContent = await ejs.render(
           await fs.readFile(
             path.join(this.projectPath, "templates/service-template.ts"),
-            "utf-8",
+            "utf-8"
           ),
-          { model },
+          { model }
         );
         await fs.writeFile(
           path.join(
             this.projectPath,
-            `src/services/${model.name.toLowerCase()}.service.ts`,
+            `src/services/${model.name.toLowerCase()}.service.ts`
           ),
-          serviceContent,
+          serviceContent
         );
 
         const controllerContent = await ejs.render(
           await fs.readFile(
             path.join(this.projectPath, "templates/controller-template.ts"),
-            "utf-8",
+            "utf-8"
           ),
-          { model },
+          { model }
         );
         await fs.writeFile(
           path.join(
             this.projectPath,
-            `src/controllers/${model.name.toLowerCase()}.controller.ts`,
+            `src/controllers/${model.name.toLowerCase()}.controller.ts`
           ),
-          controllerContent,
+          controllerContent
         );
 
         const routeContent = await ejs.render(
           await fs.readFile(
             path.join(this.projectPath, "templates/routes-template.ts"),
-            "utf-8",
+            "utf-8"
           ),
-          { model },
+          { model }
         );
         await fs.writeFile(
           path.join(
             this.projectPath,
-            `src/routes/${model.name.toLowerCase()}.routes.ts`,
+            `src/routes/${model.name.toLowerCase()}.routes.ts`
           ),
-          routeContent,
+          routeContent
         );
         continue;
       }
@@ -125,84 +125,84 @@ export class Template {
       const modelContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/model-template.ts"),
-          "utf-8",
+          "utf-8"
         ),
         {
           model,
           getZodValidator: this.getZodValidator,
-        },
+        }
       );
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/models/${model.name.toLowerCase()}.model.ts`,
+          `src/models/${model.name.toLowerCase()}.model.ts`
         ),
-        modelContent,
+        modelContent
       );
 
       const serviceContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/service-template.ts"),
-          "utf-8",
+          "utf-8"
         ),
-        { model },
+        { model }
       );
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/services/${model.name.toLowerCase()}.service.ts`,
+          `src/services/${model.name.toLowerCase()}.service.ts`
         ),
-        serviceContent,
+        serviceContent
       );
 
       const controllerContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/controller-template.ts"),
-          "utf-8",
+          "utf-8"
         ),
-        { model },
+        { model }
       );
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/controllers/${model.name.toLowerCase()}.controller.ts`,
+          `src/controllers/${model.name.toLowerCase()}.controller.ts`
         ),
-        controllerContent,
+        controllerContent
       );
 
       const routeContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/routes-template.ts"),
-          "utf-8",
+          "utf-8"
         ),
-        { model },
+        { model }
       );
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/routes/${model.name.toLowerCase()}.routes.ts`,
+          `src/routes/${model.name.toLowerCase()}.routes.ts`
         ),
-        routeContent,
+        routeContent
       );
     }
 
     const mainContent = await ejs.render(
       await fs.readFile(
         path.join(__dirname, "../templates/main-template.ejs"),
-        "utf-8",
+        "utf-8"
       ),
       {
         models: this.models,
         projectName: path.basename(this.projectPath),
-      },
+        isAuth: this.isAuth,
+      }
     );
     await fs.writeFile(
       path.join(this.projectPath, "src/index.ts"),
-      mainContent,
+      mainContent
     );
     await fs.remove(path.join(this.projectPath, "templates"));
   }
-
   async getZodValidator(field: ModelField) {
     let validator = "z";
     switch (field.type) {
