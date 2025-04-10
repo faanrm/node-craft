@@ -222,7 +222,6 @@ export class Template {
       case "Int":
         validator += ".number().int()";
 
-        // Add number validations
         if (field.min !== undefined) {
           validator += `.min(${field.min}, { message: "Must be at least ${field.min}" })`;
         }
@@ -233,7 +232,6 @@ export class Template {
       case "Float":
         validator += ".number()";
 
-        // Add number validations
         if (field.min !== undefined) {
           validator += `.min(${field.min}, { message: "Must be at least ${field.min}" })`;
         }
