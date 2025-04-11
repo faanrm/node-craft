@@ -40,89 +40,110 @@ export class Prisma {
     return this.models;
   }
   async generatePrismaSchema() {
-    await fs.ensureDir(path.join(this.projectPath, 'prisma'));
-  
-    let schemaContent = "generator client {\n  provider = \"prisma-client-js\"\n}\n\n";
-  
+    await fs.ensureDir(path.join(this.projectPath, "prisma"));
+
+    let schemaContent =
+      'generator client {\n  provider = "prisma-client-js"\n}\n\n';
+
     let dbProvider, dbUrlEnvVar;
     switch (this.database) {
       case "MySQL":
         dbProvider = "mysql";
-        dbUrlEnvVar = "DATABASE_URL=\"mysql://username:password@localhost:3306/mydatabase\"";
+        dbUrlEnvVar =
+          'DATABASE_URL="mysql://username:password@localhost:3306/mydatabase"';
         break;
       case "MongoDB":
         dbProvider = "mongodb";
-        dbUrlEnvVar = "DATABASE_URL=\"mongodb://username:password@localhost:27017/mydatabase\"";
+        dbUrlEnvVar =
+          'DATABASE_URL="mongodb://username:password@localhost:27017/mydatabase"';
         break;
       default:
         dbProvider = "postgresql";
-        dbUrlEnvVar = "DATABASE_URL=\"postgresql://username:password@localhost:5432/mydatabase?schema=public\"";
+        dbUrlEnvVar =
+          'DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"';
     }
-  
+
     schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
-    
+
     const envPath = path.join(this.projectPath, ".env");
-    if (!await fs.pathExists(envPath) || (await fs.readFile(envPath, 'utf-8')).trim() === '') {
-      await fs.writeFile(envPath, dbUrlEnvVar);
+    let envContent = "";
+
+    if (await fs.pathExists(envPath)) {
+      envContent = await fs.readFile(envPath, "utf-8");
+
+      if (envContent.includes("DATABASE_URL=")) {
+        envContent = envContent.replace(
+          /DATABASE_URL=.*(\r?\n|$)/g,
+          `${dbUrlEnvVar}\n`
+        );
+      } else {
+        envContent += `\n${dbUrlEnvVar}\n`;
+      }
+    } else {
+      envContent = `${dbUrlEnvVar}\n`;
     }
-  
+
+    await fs.writeFile(envPath, envContent);
+
     this.models.forEach((model) => {
       schemaContent += `model ${model.name} {\n`;
-      schemaContent += `  id String @id @default(uuid())\n`;
-  
-      model.fields.forEach(field => {
+      schemaContent += `  id String @id @default(uuid())  @map("_id")\n`;
+
+      model.fields.forEach((field) => {
         let fieldLine = `  ${field.name} `;
-  
+
         if (field.isRelation) {
-          if (field.relationType === 'OneToOne') {
+          if (field.relationType === "OneToOne") {
             fieldLine += `${field.relationModel}? @relation(fields: [${field.name}Id], references: [id])\n`;
             schemaContent += fieldLine;
             schemaContent += `  ${field.name}Id String? @unique\n`;
             return;
-          } else if (field.relationType === 'OneToMany') {
+          } else if (field.relationType === "OneToMany") {
             fieldLine += `${field.relationModel}[] @relation("${model.name}To${field.relationModel}")\n`;
             schemaContent += fieldLine;
             return;
-          } else if (field.relationType === 'ManyToMany') {
+          } else if (field.relationType === "ManyToMany") {
             fieldLine += `${field.relationModel}[] @relation("${model.name}To${field.relationModel}")\n`;
             schemaContent += fieldLine;
             return;
           }
         } else {
           fieldLine += field.type;
-          if (field.isOptional) fieldLine += '?';
-          if (field.isUnique) fieldLine += ' @unique';
-          schemaContent += fieldLine + '\n';
+          if (field.isOptional) fieldLine += "?";
+          if (field.isUnique) fieldLine += " @unique";
+          schemaContent += fieldLine + "\n";
         }
       });
-  
-      schemaContent += '}\n\n';
+
+      schemaContent += "}\n\n";
     });
-  
+
     try {
       await fs.writeFile(
-        path.join(this.projectPath, 'prisma', 'schema.prisma'),
+        path.join(this.projectPath, "prisma", "schema.prisma"),
         schemaContent
       );
-      console.log('Schema generated successfully.');
+      console.log("Schema generated successfully.");
     } catch (error) {
-      console.error('Error generating schema:', error);
+      console.error("Error generating schema:", error);
       throw error;
     }
-  
+
     return this.models;
   }
   setModels(models: ProjectModel[]) {
     this.models = models;
   }
   async addUserModel(userModel: ProjectModel) {
-    const existingUserModelIndex = this.models.findIndex(m => m.name === "User");
+    const existingUserModelIndex = this.models.findIndex(
+      (m) => m.name === "User"
+    );
     if (existingUserModelIndex >= 0) {
       this.models[existingUserModelIndex] = userModel;
     } else {
       this.models.push(userModel);
     }
-    
+
     await this.generatePrismaSchema();
   }
 }

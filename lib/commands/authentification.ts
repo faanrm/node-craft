@@ -3,7 +3,7 @@ import path from "path";
 import type { ProjectModel } from "../models/project-model";
 
 export class Authentification {
-  constructor(private projectPath: string) { }
+  constructor(private projectPath: string) {}
 
   async setupAuthentication() {
     console.log("Setting up authentication...");
@@ -20,7 +20,7 @@ export class Authentification {
         {
           name: "password",
           type: "String",
-          isOptional: false, 
+          isOptional: false,
           isUnique: false,
         },
         {
@@ -64,39 +64,39 @@ export class Authentification {
       path.join(this.projectPath, "src/middleware/auth.middleware.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/auth/auth-middleware.ejs"),
-        "utf-8",
-      ),
+        "utf-8"
+      )
     );
 
     await fs.writeFile(
       path.join(this.projectPath, "src/models/user.model.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/auth/user-model.ejs"),
-        "utf-8",
-      ),
+        "utf-8"
+      )
     );
     await fs.writeFile(
       path.join(this.projectPath, "src/services/auth.service.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/auth/auth-service.ejs"),
-        "utf-8",
-      ),
+        "utf-8"
+      )
     );
 
     await fs.writeFile(
       path.join(this.projectPath, "src/controllers/auth.controller.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/auth/auth-controller.ejs"),
-        "utf-8",
-      ),
+        "utf-8"
+      )
     );
 
     await fs.writeFile(
       path.join(this.projectPath, "src/routes/auth.routes.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/auth/auth-routes.ejs"),
-        "utf-8",
-      ),
+        "utf-8"
+      )
     );
   }
 
@@ -123,12 +123,22 @@ export class Authentification {
 
   private async updateEnvWithJwtSecret() {
     const envPath = path.join(this.projectPath, ".env");
-    const envContent = await fs.readFile(envPath, "utf-8");
+    let envContent = "";
 
-    const updatedEnvContent =
-      envContent + "\nJWT_SECRET=your_jwt_secret_key_here\nJWT_EXPIRES_IN=7d\n";
+    if (await fs.pathExists(envPath)) {
+      envContent = await fs.readFile(envPath, "utf-8");
 
-    await fs.writeFile(envPath, updatedEnvContent);
+      if (!envContent.includes("JWT_SECRET=")) {
+        envContent += "\nJWT_SECRET=your_jwt_secret_key_here\n";
+      }
+
+      if (!envContent.includes("JWT_EXPIRES_IN=")) {
+        envContent += "JWT_EXPIRES_IN=7d\n";
+      }
+    } else {
+      envContent = "JWT_SECRET=your_jwt_secret_key_here\nJWT_EXPIRES_IN=7d\n";
+    }
+
+    await fs.writeFile(envPath, envContent);
   }
 }
-

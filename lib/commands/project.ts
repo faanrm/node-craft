@@ -14,7 +14,7 @@ export class Project {
     private packageService: Package,
     private prismaService: Prisma,
     private templateService: Template,
-    private projectPath: string,
+    private projectPath: string
   ) {}
   async createProject() {
     const projectDetails = await inquirer.prompt([
@@ -51,7 +51,10 @@ export class Project {
 
     this.packageService = new Package(this.projectPath);
     this.prismaService = new Prisma(this.projectPath, projectDetails.database);
-    this.templateService = new Template(this.projectPath, projectDetails.authentification);
+    this.templateService = new Template(
+      this.projectPath,
+      projectDetails.authentification
+    );
     this.authService = new Authentification(this.projectPath);
     await this.generateProjectStructure();
 
@@ -70,7 +73,7 @@ export class Project {
         await this.prismaService.addUserModel(userModel);
         models.push(userModel);
       } catch (error) {
-        console.error('Error setting up authentication:', error);
+        console.error("Error setting up authentication:", error);
       }
     }
 
@@ -81,8 +84,8 @@ export class Project {
     await this.setupProjectDependencies();
     console.log(
       chalk.green(
-        `✅ Project ${projectDetails.projectName} created successfully!`,
-      ),
+        `✅ Project ${projectDetails.projectName} created successfully!`
+      )
     );
     console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
   }
@@ -121,16 +124,18 @@ dist/
 
     await fs.writeFile(
       path.join(this.projectPath, ".gitignore"),
-      gitignoreContent,
+      gitignoreContent
     );
   }
 
   async createEnvFile() {
-    const envContent = `
-DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"
-`;
-
-    await fs.writeFile(path.join(this.projectPath, ".env"), envContent);
+    const envPath = path.join(this.projectPath, ".env");
+    if (!(await fs.pathExists(envPath))) {
+      const envContent = `
+  DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"
+  `;
+      await fs.writeFile(path.join(this.projectPath, ".env"), envContent);
+    }
   }
 
   async setupProjectDependencies() {
@@ -139,7 +144,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=pu
 
     console.log(chalk.yellow("To install dependencies, run:"));
     console.log(
-      chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`),
+      chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`)
     );
   }
 
@@ -154,8 +159,7 @@ DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=pu
     await fs.writeJSON(
       path.join(this.projectPath, "nodemon.json"),
       nodemonConfig,
-      { spaces: 2 },
+      { spaces: 2 }
     );
   }
 }
-
