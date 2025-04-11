@@ -45,22 +45,25 @@ export class Prisma {
     let schemaContent =
       'generator client {\n  provider = "prisma-client-js"\n}\n\n';
 
-    let dbProvider, dbUrlEnvVar;
+    let dbProvider, dbUrlEnvVar, idField;
     switch (this.database) {
       case "MySQL":
         dbProvider = "mysql";
         dbUrlEnvVar =
           'DATABASE_URL="mysql://username:password@localhost:3306/mydatabase"';
+        idField = `  id String @id @default(uuid())\n`;
         break;
       case "MongoDB":
         dbProvider = "mongodb";
         dbUrlEnvVar =
           'DATABASE_URL="mongodb://username:password@localhost:27017/mydatabase"';
+        idField = `  id String @id @default(uuid()) @map("_id")\n`;
         break;
       default:
         dbProvider = "postgresql";
         dbUrlEnvVar =
           'DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"';
+        idField = `  id String @id @default(uuid())\n`;
     }
 
     schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
@@ -87,7 +90,7 @@ export class Prisma {
 
     this.models.forEach((model) => {
       schemaContent += `model ${model.name} {\n`;
-      schemaContent += `  id String @id @default(uuid())  @map("_id")\n`;
+      schemaContent += idField;
 
       model.fields.forEach((field) => {
         let fieldLine = `  ${field.name} `;
