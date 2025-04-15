@@ -94,8 +94,6 @@ export const promptFieldDetails = async (): Promise<ModelField | null> => {
           "Float",
           "Boolean",
           "DateTime",
-          "Json",
-          "Bytes",
           "Relation",
           "Enum",
         ],
@@ -150,13 +148,15 @@ export const promptFieldDetails = async (): Promise<ModelField | null> => {
   }
 };
 export const promptModelName = async (): Promise<string | null> => {
-    const response = await inquirer.prompt([
-      { type: 'input', name: 'modelName', message: 'Enter model name' }
-    ]);
-    
-    if (response.modelName) {
-      return response.modelName.charAt(0).toUpperCase() + response.modelName.slice(1);
-    }
-    
-    return null;
-  };
+  const response = await inquirer.prompt([
+    { type: "input", name: "modelName", message: "Enter model name" },
+  ]);
+
+  if (response.modelName) {
+    return (
+      response.modelName.charAt(0).toUpperCase() + response.modelName.slice(1)
+    );
+  }
+
+  return null;
+};
