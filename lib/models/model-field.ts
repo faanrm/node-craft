@@ -11,4 +11,6 @@ export interface ModelField {
     pattern?: string;
     min?: number;
     max?: number;
+    enumName?: string;
+    enumValues?: Record<string, string>;
 }

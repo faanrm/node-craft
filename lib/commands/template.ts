@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import ejs from "ejs";
 import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
+
 export class Template {
   private projectPath!: string;
   private isAuth!: boolean;
@@ -11,6 +12,7 @@ export class Template {
     this.isAuth = isAuth;
   }
   private models: ProjectModel[] = [];
+  
   async setupTemplate() {
     const templateDir = path.join(this.projectPath, "templates");
     await fs.ensureDir(templateDir);
@@ -58,6 +60,7 @@ export class Template {
       );
     }
   }
+  
   async codeTemplate() {
     await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
     await fs.ensureDir(path.join(this.projectPath, "src/models"));
@@ -203,6 +206,7 @@ export class Template {
     );
     await fs.remove(path.join(this.projectPath, "templates"));
   }
+  
   async getZodValidator(field: ModelField) {
     let validator = "z";
     switch (field.type) {
@@ -249,7 +253,11 @@ export class Template {
         validator += ".record(z.any())";
         break;
       default:
-        if (field.isRelation) {
+        // Check if it's an enum type
+        if (field.enumName && field.enumValues) {
+          const enumValues = Object.values(field.enumValues);
+          validator += `.enum([${enumValues.map(v => `"${v}"`).join(', ')}], { message: "Must be one of the following values: ${enumValues.join(', ')}" })`;
+        } else if (field.isRelation) {
           validator += ".object({})";
         } else {
           validator += ".any()";
@@ -262,6 +270,7 @@ export class Template {
 
     return validator;
   }
+  
   setModels(models: ProjectModel[]) {
     this.models = models;
   }

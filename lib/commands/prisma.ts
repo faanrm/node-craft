@@ -11,6 +11,7 @@ import {
 export class Prisma {
   private models: ProjectModel[] = [];
   private projectPath: string;
+  private enums: Map<string, Record<string, string>> = new Map();
 
   constructor(projectPath: string, private database: string = "") {
     this.projectPath = projectPath;
@@ -29,6 +30,11 @@ export class Prisma {
           await stringValidations(field);
         } else if (field.type === "Int" || field.type === "Float") {
           await numberValidations(field);
+        } else if (field.type === "Enum" && field.enumName && field.enumValues) {
+          // Store enum for later use
+          this.enums.set(field.enumName, field.enumValues);
+          // Change the type to refer to the enum
+          field.type = field.enumName;
         }
 
         model.fields.push(field);
@@ -39,6 +45,7 @@ export class Prisma {
     await this.generatePrismaSchema();
     return this.models;
   }
+  
   async generatePrismaSchema() {
     await fs.ensureDir(path.join(this.projectPath, "prisma"));
 
@@ -88,6 +95,15 @@ export class Prisma {
 
     await fs.writeFile(envPath, envContent);
 
+    // Generate enum definitions
+    this.enums.forEach((values, name) => {
+      schemaContent += `enum ${name} {\n`;
+      Object.entries(values).forEach(([key, value]) => {
+        schemaContent += `  ${key} = "${value}"\n`;
+      });
+      schemaContent += `}\n\n`;
+    });
+
     this.models.forEach((model) => {
       schemaContent += `model ${model.name} {\n`;
       schemaContent += idField;
@@ -134,9 +150,11 @@ export class Prisma {
 
     return this.models;
   }
+  
   setModels(models: ProjectModel[]) {
     this.models = models;
   }
+  
   async addUserModel(userModel: ProjectModel) {
     const existingUserModelIndex = this.models.findIndex(
       (m) => m.name === "User"

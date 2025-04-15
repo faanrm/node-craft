@@ -1,5 +1,6 @@
 import type { ModelField } from "../models/model-field";
 import inquirer from "inquirer";
+
 export const stringValidations = async (field: ModelField) => {
   const response = await inquirer.prompt([
     {
@@ -50,6 +51,7 @@ export const stringValidations = async (field: ModelField) => {
     field.pattern = response.pattern;
   }
 };
+
 export const numberValidations = async (field: ModelField) => {
   const response = await inquirer.prompt([
     {
@@ -80,6 +82,61 @@ export const numberValidations = async (field: ModelField) => {
   if (response.hasMin) field.min = response.min;
   if (response.hasMax) field.max = response.max;
 };
+
+export const promptEnumValues = async (field: ModelField) => {
+  const response = await inquirer.prompt([
+    {
+      type: "input",
+      name: "enumName",
+      message: "Enter enum name (e.g., UserRole):",
+    },
+    {
+      type: "input",
+      name: "enumValues",
+      message:
+        "Enter enum values separated by commas (e.g., ADMIN,USER,EDITOR):",
+    },
+  ]);
+
+  if (response.enumName && response.enumValues) {
+    field.enumName = response.enumName;
+
+    const enumValues = response.enumValues
+      .split(",")
+      .map((val: string) => val.trim());
+
+    field.enumValues = {};
+    enumValues.forEach((val: string) => {
+      if (field.enumValues) field.enumValues[val] = val;
+    });
+
+    const customMappings = await inquirer.prompt([
+      {
+        type: "confirm",
+        name: "hasCustomMappings",
+        message: "Do you want to customize enum value mappings?",
+        default: false,
+      },
+    ]);
+
+    if (customMappings.hasCustomMappings) {
+      for (const enumKey of Object.keys(field.enumValues)) {
+        const mapping = await inquirer.prompt([
+          {
+            type: "input",
+            name: "mappedValue",
+            message: `Enter custom value for ${enumKey} (default: "${enumKey}"):`,
+          },
+        ]);
+
+        if (mapping.mappedValue) {
+          field.enumValues[enumKey] = mapping.mappedValue;
+        }
+      }
+    }
+  }
+};
+
 export const promptFieldDetails = async (): Promise<ModelField | null> => {
   try {
     const fieldResponse = await inquirer.prompt([
@@ -141,12 +198,24 @@ export const promptFieldDetails = async (): Promise<ModelField | null> => {
       relationModel: fieldResponse.relationModel || null,
     };
 
+    if (fieldResponse.fieldType === "String") {
+      await stringValidations(field);
+    } else if (
+      fieldResponse.fieldType === "Int" ||
+      fieldResponse.fieldType === "Float"
+    ) {
+      await numberValidations(field);
+    } else if (fieldResponse.fieldType === "Enum") {
+      await promptEnumValues(field);
+    }
+
     return field;
   } catch (error) {
     console.error("Error prompting for field details:", error);
     return null;
   }
 };
+
 export const promptModelName = async (): Promise<string | null> => {
   const response = await inquirer.prompt([
     { type: "input", name: "modelName", message: "Enter model name" },
