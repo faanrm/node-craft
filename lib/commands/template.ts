@@ -253,7 +253,6 @@ export class Template {
         validator += ".record(z.any())";
         break;
       default:
-        // Check if it's an enum type
         if (field.enumName && field.enumValues) {
           const enumValues = Object.values(field.enumValues);
           validator += `.enum([${enumValues.map(v => `"${v}"`).join(', ')}], { message: "Must be one of the following values: ${enumValues.join(', ')}" })`;

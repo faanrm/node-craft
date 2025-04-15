@@ -31,9 +31,7 @@ export class Prisma {
         } else if (field.type === "Int" || field.type === "Float") {
           await numberValidations(field);
         } else if (field.type === "Enum" && field.enumName && field.enumValues) {
-          // Store enum for later use
           this.enums.set(field.enumName, field.enumValues);
-          // Change the type to refer to the enum
           field.type = field.enumName;
         }
 
@@ -95,11 +93,10 @@ export class Prisma {
 
     await fs.writeFile(envPath, envContent);
 
-    // Generate enum definitions
     this.enums.forEach((values, name) => {
       schemaContent += `enum ${name} {\n`;
       Object.entries(values).forEach(([key, value]) => {
-        schemaContent += `  ${key} = "${value}"\n`;
+        schemaContent += `  ${key}\n`;
       });
       schemaContent += `}\n\n`;
     });
@@ -127,7 +124,12 @@ export class Prisma {
             return;
           }
         } else {
-          fieldLine += field.type;
+          if (this.enums.has(field.type)) {
+            fieldLine += field.type;
+          } else {
+            fieldLine += field.type;
+          }
+          
           if (field.isOptional) fieldLine += "?";
           if (field.isUnique) fieldLine += " @unique";
           schemaContent += fieldLine + "\n";
