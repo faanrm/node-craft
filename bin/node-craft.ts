@@ -1,9 +1,11 @@
 #!/usr/bin/env bun
-import { Template } from "../lib/commands/template";
-import { Package } from "../lib/commands/package";
-import { Prisma } from "../lib/commands/prisma";
-import { Authentification } from "../lib/commands/authentification";
-import { Project } from "../lib/commands/project";
+
+import { Package } from "../src/commands/package";
+import { Prisma } from "../src/commands/prisma";
+import { Template } from "../src/commands/template";
+import { Authentification } from "../src/commands/authentification";
+import { Project } from "../src/commands/project";
+import { CLI } from "../src/commands/main";
 const projectPath = "";
 const packageService = new Package(projectPath);
 const prismaService = new Prisma(projectPath);
@@ -14,7 +16,7 @@ const project = new Project(
   packageService,
   prismaService,
   templateService,
-  projectPath,
+  projectPath
 );
 
 new CLI(project);
