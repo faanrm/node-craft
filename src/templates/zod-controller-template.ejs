@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import <%= model.name %>Service from '../services/<%= model.name.toLowerCase() %>.service';
 import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
-import { ZodError } from 'zod';
 
 export class <%= model.name %>Controller {
   async create(req: Request, res: Response) {
@@ -9,9 +8,6 @@ export class <%= model.name %>Controller {
       const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.create(req.body as Create<%= model.name %>Input);
       res.status(201).json(<%= model.name.toLowerCase() %>);
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Validation error')) {
-        return res.status(400).json({ error: error.message });
-      }
       res.status(500).json({ error: error.message });
     }
   }
@@ -42,9 +38,6 @@ export class <%= model.name %>Controller {
       const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.update(req.params.id, req.body as Update<%= model.name %>Input);
       res.json(<%= model.name.toLowerCase() %>);
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Validation error')) {
-        return res.status(400).json({ error: error.message });
-      }
       res.status(500).json({ error: error.message });
     }
   }

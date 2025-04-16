@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
 import AuthService from '../services/auth.service';
 import { UserModel } from '../models/user.model';
+import { validateRequest } from '../middleware/validator-middleware';
+import { Router } from 'express';
 
 export class AuthController {
   async register(req: Request, res: Response) {
     try {
-      const validatedData = UserModel.schema.parse(req.body);
+
+      const user = await AuthService.register(req.body);
       
-      const user = await AuthService.register(validatedData);
       res.status(201).json({
         message: 'User registered successfully',
         user: {
@@ -18,20 +20,16 @@ export class AuthController {
         }
       });
     } catch (error) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          message: 'Validation error', 
-          errors: error.errors 
-        });
+      if (error.message.includes('already exists')) {
+        return res.status(409).json({ message: error.message });
       }
-      res.status(400).json({ message: error.message });
+      res.status(500).json({ message: error.message });
     }
   }
 
   async login(req: Request, res: Response) {
     try {
-      const validatedData = UserModel.loginSchema.parse(req.body);
-      const { email, password } = validatedData;
+      const { email, password } = req.body;
       
       const result = await AuthService.login(email, password);
       
@@ -46,12 +44,6 @@ export class AuthController {
         }
       });
     } catch (error) {
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          message: 'Validation error', 
-          errors: error.errors 
-        });
-      }
       res.status(401).json({ message: error.message });
     }
   }
