@@ -67,7 +67,7 @@ export class Template {
     await fs.ensureDir(path.join(this.projectPath, "src/services"));
     await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
     await fs.ensureDir(path.join(this.projectPath, "src/routes"));
-
+  
     await fs.writeFile(
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
@@ -75,7 +75,7 @@ export class Template {
         "utf-8",
       ),
     );
-
+  
     for (const model of this.models) {
       if (model.name === "User" && this.isAuth) {
         const serviceContent = await ejs.render(
@@ -92,7 +92,7 @@ export class Template {
           ),
           serviceContent,
         );
-
+  
         const controllerContent = await ejs.render(
           await fs.readFile(
             path.join(this.projectPath, "templates/controller-template.ts"),
@@ -107,7 +107,7 @@ export class Template {
           ),
           controllerContent,
         );
-
+  
         const routeContent = await ejs.render(
           await fs.readFile(
             path.join(this.projectPath, "templates/routes-template.ts"),
@@ -142,7 +142,7 @@ export class Template {
         ),
         modelContent,
       );
-
+  
       const serviceContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/service-template.ts"),
@@ -157,7 +157,7 @@ export class Template {
         ),
         serviceContent,
       );
-
+  
       const controllerContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/controller-template.ts"),
@@ -172,7 +172,7 @@ export class Template {
         ),
         controllerContent,
       );
-
+  
       const routeContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/routes-template.ts"),
@@ -188,7 +188,7 @@ export class Template {
         routeContent,
       );
     }
-
+  
     const mainContent = await ejs.render(
       await fs.readFile(
         path.join(__dirname, "../templates/main-template.ejs"),
