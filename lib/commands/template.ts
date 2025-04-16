@@ -74,6 +74,7 @@ export class Template {
     await fs.ensureDir(path.join(this.projectPath, "src/services"));
     await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
     await fs.ensureDir(path.join(this.projectPath, "src/routes"));
+    await fs.ensureDir(path.join(this.projectPath, "src/interfaces")); 
 
     await fs.writeFile(
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
