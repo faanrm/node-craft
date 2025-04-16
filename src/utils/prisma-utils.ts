@@ -92,12 +92,10 @@ export const numberValidations = async (field: ModelField) => {
   if (response.hasMin) field.min = response.min;
   if (response.hasMax) field.max = response.max;
   
-  // Mark this field as having had validations applied
   field.hasValidationsApplied = true;
 };
 
 export const promptEnumValues = async (field: ModelField) => {
-  // Check if validations have already been applied to this field
   if (field.hasValidationsApplied) {
     return;
   }
