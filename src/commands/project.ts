@@ -87,7 +87,7 @@ export class Project {
         `✅ Project ${projectDetails.projectName} created successfully!`
       )
     );
-    console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
+    //console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
   }
 
   async generateProjectStructure() {

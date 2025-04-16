@@ -13,4 +13,5 @@ export interface ModelField {
     max?: number;
     enumName?: string;
     enumValues?: Record<string, string>;
+    hasValidationsApplied?: boolean;
 }

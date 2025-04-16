@@ -2,6 +2,10 @@ import type { ModelField } from "../models/model-field";
 import inquirer from "inquirer";
 
 export const stringValidations = async (field: ModelField) => {
+  if (field.hasValidationsApplied) {
+    return;
+  }
+
   const response = await inquirer.prompt([
     {
       type: "confirm",
@@ -50,9 +54,15 @@ export const stringValidations = async (field: ModelField) => {
   if (response.hasPattern) {
     field.pattern = response.pattern;
   }
+
+  field.hasValidationsApplied = true;
 };
 
 export const numberValidations = async (field: ModelField) => {
+  if (field.hasValidationsApplied) {
+    return;
+  }
+
   const response = await inquirer.prompt([
     {
       type: "confirm",
@@ -81,9 +91,17 @@ export const numberValidations = async (field: ModelField) => {
   ]);
   if (response.hasMin) field.min = response.min;
   if (response.hasMax) field.max = response.max;
+  
+  // Mark this field as having had validations applied
+  field.hasValidationsApplied = true;
 };
 
 export const promptEnumValues = async (field: ModelField) => {
+  // Check if validations have already been applied to this field
+  if (field.hasValidationsApplied) {
+    return;
+  }
+
   const response = await inquirer.prompt([
     {
       type: "input",
@@ -135,6 +153,9 @@ export const promptEnumValues = async (field: ModelField) => {
       }
     }
   }
+  
+
+  field.hasValidationsApplied = true;
 };
 
 export const promptFieldDetails = async (): Promise<ModelField | null> => {
@@ -196,6 +217,7 @@ export const promptFieldDetails = async (): Promise<ModelField | null> => {
       isRelation: fieldResponse.fieldType === "Relation",
       relationType: fieldResponse.relationType,
       relationModel: fieldResponse.relationModel || null,
+      hasValidationsApplied: false, 
     };
 
     if (fieldResponse.fieldType === "String") {
