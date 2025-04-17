@@ -1,0 +1,10 @@
+
+import { <%= model.name %> } from '../entities/<%= model.name.toLowerCase() %>';
+
+export interface I<%= model.name %>Repository {
+  create(entity: Omit<<%= model.name %>, 'id'>): Promise<<%= model.name %>>;
+  findAll(): Promise<<%= model.name %>[]>;
+  findById(id: string): Promise<<%= model.name %> | null>;
+  update(id: string, entity: Partial<<%= model.name %>>): Promise<<%= model.name %>>;
+  delete(id: string): Promise<void>;
+}

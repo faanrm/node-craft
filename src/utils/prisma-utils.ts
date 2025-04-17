@@ -125,31 +125,6 @@ export const promptEnumValues = async (field: ModelField) => {
     enumValues.forEach((val: string) => {
       if (field.enumValues) field.enumValues[val] = val;
     });
-
-    const customMappings = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "hasCustomMappings",
-        message: "Do you want to customize enum value mappings?",
-        default: false,
-      },
-    ]);
-
-    if (customMappings.hasCustomMappings) {
-      for (const enumKey of Object.keys(field.enumValues)) {
-        const mapping = await inquirer.prompt([
-          {
-            type: "input",
-            name: "mappedValue",
-            message: `Enter custom value for ${enumKey} (default: "${enumKey}"):`,
-          },
-        ]);
-
-        if (mapping.mappedValue) {
-          field.enumValues[enumKey] = mapping.mappedValue;
-        }
-      }
-    }
   }
   
 
@@ -179,11 +154,13 @@ export const promptFieldDetails = async (): Promise<ModelField | null> => {
         type: "confirm",
         name: "isOptional",
         message: "Is field optional?",
+        default : false , 
         when: (answers) => answers.fieldName !== "",
       },
       {
         type: "confirm",
         name: "isUnique",
+        default : false,
         message: "Is field unique?",
         when: (answers) => answers.fieldName !== "",
       },

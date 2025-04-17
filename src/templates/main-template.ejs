@@ -1,25 +1,30 @@
+import 'reflect-metadata';
 import express from 'express';
 import cors from 'cors';
-import { Request, Response } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { registerDependencies } from './infrastructure/container';
 
 <% if (isAuth) { %>
-import authRouter from './routes/auth.routes';
-import userRouter from './routes/user.routes';
+import authRouter from './interface/http/routes/auth.routes';
+import userRouter from './interface/http/routes/user.routes';
 <% } %>
 <% for (const model of models) { %>
 <% if (model.name === "User" && !isAuth) { %>
-import userRouter from './routes/user.routes';
+import userRouter from './interface/http/routes/user.routes';
 <% } else if (model.name !== "User") { %>
-import <%= model.name.toLowerCase() %>Router from './routes/<%= model.name.toLowerCase() %>.routes';
+import <%= model.name.toLowerCase() %>Router from './interface/http/routes/<%= model.name.toLowerCase() %>.routes';
 <% } %>
 <% } %>
 
+dotenv.config();
+
+registerDependencies();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
-dotenv.config();
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
@@ -42,7 +47,7 @@ app.use('/api/<%= model.name.toLowerCase() %>s', <%= model.name.toLowerCase() %>
 <% } %>
 <% } %>
 
-app.get('/hello', (req:Request, res:Response) => {
+app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: '<%= projectName %> API is running',
@@ -50,15 +55,13 @@ app.get('/hello', (req:Request, res:Response) => {
   });
 });
 
-
-app.use((req:Request, res:Response) => {
+app.use((req, res) => {
   res.status(404).json({
     status: 'error',
     message: 'Endpoint not found',
     timestamp: new Date().toISOString()
   });
 });
-
 
 app.listen(PORT, () => {
   console.log(`<%= projectName %> API running on port ${PORT}`);

@@ -1,0 +1,19 @@
+
+export class <%= model.name %> {
+  id: string;
+  <% model.fields.forEach(function(field) { %>
+  <%= field.name %>: <%= field.type === 'Int' ? 'number' : field.type === 'Float' ? 'number' : field.type %><%= field.isOptional ? ' | null' : '' %>;
+  <% }); %>
+
+  constructor(
+    id: string,
+    <% model.fields.forEach(function(field, index) { %>
+    <%= field.name %>: <%= field.type === 'Int' ? 'number' : field.type === 'Float' ? 'number' : field.type %><%= field.isOptional ? ' | null' : '' %><%= index < model.fields.length - 1 ? ',' : '' %>
+    <% }); %>
+  ) {
+    this.id = id;
+    <% model.fields.forEach(function(field) { %>
+    this.<%= field.name %> = <%= field.name %>;
+    <% }); %>
+  }
+}

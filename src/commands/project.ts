@@ -92,13 +92,21 @@ export class Project {
 
   async generateProjectStructure() {
     const directories = [
-      "src/models",
-      "src/controllers",
-      "src/routes",
-      "src/services",
-      "src/utils",
-      // "src/middlewares",
-      "src/validators",
+      "src/domain/entities",
+      "src/domain/repositories",
+      "src/domain/services",
+      "src/application/use-cases",
+      "src/application/dtos",
+      "src/application/interfaces",
+      "src/infrastructure/database",
+      "src/infrastructure/repositories",
+      "src/infrastructure/services",
+      "src/interface/http/controllers",
+      "src/interface/http/middlewares",
+      "src/interface/http/routes",
+      "src/interface/validators",
+      "src/shared/utils",
+      "src/shared/config", 
       "prisma",
     ];
 

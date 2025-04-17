@@ -1,0 +1,21 @@
+import { PrismaClient } from '@prisma/client';
+import { container } from 'tsyringe';
+
+import { Prisma<%= model.name %>Repository } from './repositories/<%= model.name.toLowerCase() %>.repository';
+
+import { <%= model.name %>UseCase } from '../application/use-cases/<%= model.name.toLowerCase() %>.use-case';
+
+import { <%= model.name %>Controller } from '../interface/http/controllers/<%= model.name.toLowerCase() %>.controller';
+
+export function registerDependencies() {
+  container.registerSingleton('PrismaClient', PrismaClient);
+  
+  container.registerSingleton(
+    'I<%= model.name %>Repository',
+    Prisma<%= model.name %>Repository
+  );
+  
+  container.registerSingleton(<%= model.name %>UseCase);
+  
+  container.registerSingleton(<%= model.name %>Controller);
+}

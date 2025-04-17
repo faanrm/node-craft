@@ -1,0 +1,52 @@
+import { PrismaClient } from '@prisma/client';
+import { <%= model.name %> } from '../../domain/entities/<%= model.name.toLowerCase() %>';
+import { I<%= model.name %>Repository } from '../../domain/repositories/<%= model.name.toLowerCase() %>.repository';
+
+export class Prisma<%= model.name %>Repository implements I<%= model.name %>Repository {
+  constructor(private prisma: PrismaClient) {}
+
+  async create(entity: Omit<<%= model.name %>, 'id'>): Promise<<%= model.name %>> {
+    const result = await this.prisma.<%= model.name.toLowerCase() %>.create({
+      data: entity
+    });
+    
+    return this.mapToEntity(result);
+  }
+
+  async findAll(): Promise<<%= model.name %>[]> {
+    const results = await this.prisma.<%= model.name.toLowerCase() %>.findMany();
+    return results.map(this.mapToEntity);
+  }
+
+  async findById(id: string): Promise<<%= model.name %> | null> {
+    const result = await this.prisma.<%= model.name.toLowerCase() %>.findUnique({
+      where: { id }
+    });
+    
+    return result ? this.mapToEntity(result) : null;
+  }
+
+  async update(id: string, entity: Partial<<%= model.name %>>): Promise<<%= model.name %>> {
+    const result = await this.prisma.<%= model.name.toLowerCase() %>.update({
+      where: { id },
+      data: entity
+    });
+    
+    return this.mapToEntity(result);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.<%= model.name.toLowerCase() %>.delete({
+      where: { id }
+    });
+  }
+
+  private mapToEntity(data: any): <%= model.name %> {
+    return new <%= model.name %>(
+      data.id,
+      <% model.fields.forEach(function(field, index) { %>
+      data.<%= field.name %><%= index < model.fields.length - 1 ? ',' : '' %>
+      <% }); %>
+    );
+  }
+}
