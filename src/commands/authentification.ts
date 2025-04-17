@@ -39,25 +39,17 @@ export class Authentification {
     };
 
     try {
-      await fs.ensureDir(
-        path.join(this.projectPath, "src/infrastructure/repositories")
-      );
-      await fs.ensureDir(
-        path.join(this.projectPath, "src/interface/http/controllers")
-      );
-      await fs.ensureDir(
-        path.join(this.projectPath, "src/interface/http/middlewares")
-      );
-      await fs.ensureDir(
-        path.join(this.projectPath, "src/interface/http/routes")
-      );
+      await fs.ensureDir(path.join(this.projectPath, "src/domain"));
+      await fs.ensureDir(path.join(this.projectPath, "src/application"));
+      await fs.ensureDir(path.join(this.projectPath, "src/infrastructure/repositories"));
+      await fs.ensureDir(path.join(this.projectPath, "src/interface/http/controllers"));
+      await fs.ensureDir(path.join(this.projectPath, "src/interface/http/middlewares"));
+      await fs.ensureDir(path.join(this.projectPath, "src/interface/http/routes"));
+
       await this.copyAuthTemplates();
-
       await this.updatePackageJson();
-
       await this.updateEnvWithJwtSecret();
 
-      //console.log("Authentication setup completed successfully");
       return userModel;
     } catch (error) {
       console.error("Error setting up authentication:", error);
@@ -66,13 +58,10 @@ export class Authentification {
   }
 
   private async copyAuthTemplates() {
-    await fs.ensureDir(path.join(this.projectPath, "src/domain"));
-    await fs.ensureDir(path.join(this.projectPath, "src/application"));
-
     await fs.writeFile(
-      path.join(this.projectPath, "src/middleware/auth.middleware.ts"),
+      path.join(this.projectPath, "src/interface/http/middlewares/auth.middleware.ts"),
       await fs.readFile(
-        path.join(__dirname, "../templates/interface/auth-middleware.ejs"),
+        path.join(__dirname, "../templates/interface/auth-middleware.ts"),
         "utf-8"
       )
     );
@@ -122,6 +111,7 @@ export class Authentification {
         "utf-8"
       )
     );
+
     await fs.writeFile(
       path.join(
         this.projectPath,
@@ -136,16 +126,8 @@ export class Authentification {
     await fs.writeFile(
       path.join(
         this.projectPath,
-        "src/interface/http/middlewares/auth.middleware.ts"
+        "src/interface/http/routes/auth.routes.ts"
       ),
-      await fs.readFile(
-        path.join(__dirname, "../templates/interface/auth-middleware.ts"),
-        "utf-8"
-      )
-    );
-
-    await fs.writeFile(
-      path.join(this.projectPath, "src/interface/http/routes/auth.routes.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/interface/auth-routes.ts"),
         "utf-8"
