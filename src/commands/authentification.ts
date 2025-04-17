@@ -67,7 +67,7 @@ export class Authentification {
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/domain/user.entity.ts"),
+      path.join(this.projectPath, "src/domain/entities/user.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/domain/user.entity.ts"),
         "utf-8"
@@ -75,7 +75,7 @@ export class Authentification {
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/domain/user-repository.ts"),
+      path.join(this.projectPath, "src/domain/repositories/user-repository.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/domain/user-repository.ts"),
         "utf-8"
@@ -83,7 +83,7 @@ export class Authentification {
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/application/user-dtos.ts"),
+      path.join(this.projectPath, "src/application/dtos/user-dtos.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/application/user-dtos.ts"),
         "utf-8"
@@ -91,7 +91,7 @@ export class Authentification {
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/application/auth-use-case.ts"),
+      path.join(this.projectPath, "src/application/use-cases/auth-use-case.ts"),
       await fs.readFile(
         path.join(__dirname, "../templates/application/auth-use-case.ts"),
         "utf-8"
