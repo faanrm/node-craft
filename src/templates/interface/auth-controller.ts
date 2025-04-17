@@ -1,14 +1,13 @@
 import { Request, Response } from 'express';
-import AuthService from '../services/auth.service';
-import { UserModel } from '../models/user.model';
-import { validateRequest } from '../middleware/validator-middleware';
-import { Router } from 'express';
+import { AuthUseCase } from '../application/auth-use-case';
+import  type { CreateUserDTO , LoginDTO } from '../application/user-dtos';
 
 export class AuthController {
-  async register(req: Request, res: Response) {
-    try {
+  constructor(private authUseCase: AuthUseCase) {}
 
-      const user = await AuthService.register(req.body);
+  async register(req: Request, res: Response): Promise<void> {
+    try {
+      const user = await this.authUseCase.register(req.body as CreateUserDTO);
       
       res.status(201).json({
         message: 'User registered successfully',
@@ -21,17 +20,16 @@ export class AuthController {
       });
     } catch (error) {
       if (error.message.includes('already exists')) {
-        return res.status(409).json({ message: error.message });
+        res.status(409).json({ message: error.message });
+        return;
       }
       res.status(500).json({ message: error.message });
     }
   }
 
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password } = req.body;
-      
-      const result = await AuthService.login(email, password);
+      const result = await this.authUseCase.login(req.body as LoginDTO);
       
       res.status(200).json({
         message: 'Login successful',
@@ -48,13 +46,14 @@ export class AuthController {
     }
   }
 
-  async me(req: Request, res: Response) {
+  async me(req: Request, res: Response): Promise<void> {
     try {
       if (!req.user) {
-        return res.status(401).json({ message: 'Authentication required' });
+        res.status(401).json({ message: 'Authentication required' });
+        return;
       }
       
-      const user = await AuthService.getUserById(req.user.id);
+      const user = await this.authUseCase.getUserById(req.user.id);
       
       res.status(200).json({
         user: {
@@ -69,5 +68,3 @@ export class AuthController {
     }
   }
 }
-
-export default new AuthController();

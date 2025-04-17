@@ -1,8 +1,0 @@
-import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
-import { z } from 'zod';
-
-export type <%= model.name %>Interface = z.infer<typeof <%= model.name %>Model.schema>;
-
-export type Create<%= model.name %>Input = Omit<<%= model.name %>Interface, 'id'>;
-
-export type Update<%= model.name %>Input = Partial<<%= model.name %>Interface>;

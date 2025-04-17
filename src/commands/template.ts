@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import ejs from "ejs";
 import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
-// Updated Template class (src/commands/template.ts)
+
 export class Template {
   private projectPath!: string;
   private isAuth!: boolean;
@@ -17,7 +17,6 @@ export class Template {
     const templateDir = path.join(this.projectPath, "templates");
     await fs.ensureDir(templateDir);
 
-    // Create core templates
     const templates = [
       {
         name: "domain/entity-template.ejs",
