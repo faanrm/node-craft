@@ -115,6 +115,7 @@ export class Template {
     await fs.ensureDir(path.join(this.projectPath, "src/domain/entities"));
     await fs.ensureDir(path.join(this.projectPath, "src/domain/repositories"));
     await fs.ensureDir(path.join(this.projectPath, "src/domain/services"));
+    let containerRegistrations = [];
 
     await fs.ensureDir(
       path.join(this.projectPath, "src/application/use-cases")
@@ -162,7 +163,7 @@ export class Template {
       )
     );
 
-    let containerContent = "";
+    //   let containerContent = "";
 
     for (const model of this.models) {
       if (model.name === "User" && this.isAuth) {
@@ -289,7 +290,7 @@ export class Template {
         routeContent
       );
 
-      containerContent += await ejs.render(
+      const containerReg = await ejs.render(
         await fs.readFile(
           path.join(
             this.projectPath,
@@ -299,8 +300,26 @@ export class Template {
         ),
         { model }
       );
+      containerRegistrations.push(containerReg);
+    }
+    const containerContent = containerRegistrations.join("\n");
+    let authContainerContent = "";
+    if (this.isAuth) {
+      authContainerContent = `
+  import { PrismaUserRepository } from './repositories/user.repository';
+  import { AuthUseCase } from '../application/auth-use-case';
+  import { AuthController } from '../interface/http/controllers/auth.controller';
+  
+  container.registerSingleton('IUserRepository', PrismaUserRepository);
+  container.registerSingleton(AuthUseCase);
+  container.registerSingleton(AuthController);
+  `;
     }
 
+    await fs.writeFile(
+      path.join(this.projectPath, "src/infrastructure/container.ts"),
+      `import 'reflect-metadata';\nimport { container } from 'tsyringe';\nimport { PrismaClient } from '@prisma/client';\n\n${containerContent}\n\n${authContainerContent}\n// Register PrismaClient\ncontainer.registerSingleton('PrismaClient', PrismaClient);\n\nexport { container };`
+    );
     await fs.writeFile(
       path.join(this.projectPath, "src/infrastructure/container.ts"),
       `import 'reflect-metadata';\nimport { container } from 'tsyringe';\nimport { PrismaClient } from '@prisma/client';\n\n${containerContent}\n\n// Register PrismaClient\ncontainer.registerSingleton('PrismaClient', PrismaClient);\n\nexport { container };`

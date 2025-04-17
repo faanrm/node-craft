@@ -70,8 +70,12 @@ export class Project {
     if (projectDetails.authentification) {
       try {
         const userModel = await this.authService.setupAuthentication();
+
         await this.prismaService.addUserModel(userModel);
+
         models.push(userModel);
+
+        this.templateService = new Template(this.projectPath, true);
       } catch (error) {
         console.error("Error setting up authentication:", error);
       }
@@ -106,7 +110,7 @@ export class Project {
       "src/interface/http/routes",
       "src/interface/validators",
       "src/shared/utils",
-      "src/shared/config", 
+      "src/shared/config",
       "prisma",
     ];
 
