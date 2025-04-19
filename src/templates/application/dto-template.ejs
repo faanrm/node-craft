@@ -6,11 +6,10 @@ export const <%= model.name %>Schema = z.object({
   <% }); %>
 });
 
-// DTOs
+
 export type Create<%= model.name %>DTO = z.infer<typeof <%= model.name %>Schema>;
 export type Update<%= model.name %>DTO = Partial<Create<%= model.name %>DTO>;
 
-// Type guard
 export function is<%= model.name %>DTO(data: unknown): data is Create<%= model.name %>DTO {
   try {
     <%= model.name %>Schema.parse(data);
