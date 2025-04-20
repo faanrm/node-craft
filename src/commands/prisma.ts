@@ -153,10 +153,6 @@ export class Prisma {
     return this.models;
   }
   
-  setModels(models: ProjectModel[]) {
-    this.models = models;
-  }
-  
   async addUserModel(userModel: ProjectModel) {
     const existingUserModelIndex = this.models.findIndex(
       (m) => m.name === "User"
