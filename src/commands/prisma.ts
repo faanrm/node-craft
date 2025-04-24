@@ -30,11 +30,7 @@ export class Prisma {
           await stringValidations(field);
         } else if (field.type === "Int" || field.type === "Float") {
           await numberValidations(field);
-        } else if (
-          field.type === "Enum" &&
-          field.enumName &&
-          field.enumValues
-        ) {
+        } else if (field.type === "Enum" && field.enumName && field.enumValues) {
           this.enums.set(field.enumName, field.enumValues);
           field.type = field.enumName;
         }
@@ -47,7 +43,7 @@ export class Prisma {
     await this.generatePrismaSchema();
     return this.models;
   }
-
+  
   async generatePrismaSchema() {
     await fs.ensureDir(path.join(this.projectPath, "prisma"));
 
@@ -74,6 +70,7 @@ export class Prisma {
           'DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"';
         idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
     }
+
     schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
 
     const envPath = path.join(this.projectPath, ".env");
@@ -132,7 +129,7 @@ export class Prisma {
           } else {
             fieldLine += field.type;
           }
-
+          
           if (field.isOptional) fieldLine += "?";
           if (field.isUnique) fieldLine += " @unique";
           schemaContent += fieldLine + "\n";
@@ -147,7 +144,7 @@ export class Prisma {
         path.join(this.projectPath, "prisma", "schema.prisma"),
         schemaContent
       );
-      //console.log("tonga aty ve ? .");
+      console.log("Schema generated successfully.");
     } catch (error) {
       console.error("Error generating schema:", error);
       throw error;
@@ -155,7 +152,7 @@ export class Prisma {
 
     return this.models;
   }
-
+  
   async addUserModel(userModel: ProjectModel) {
     const existingUserModelIndex = this.models.findIndex(
       (m) => m.name === "User"
