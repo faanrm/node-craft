@@ -56,19 +56,19 @@ export class Prisma {
         dbProvider = "mysql";
         dbUrlEnvVar =
           'DATABASE_URL="mysql://username:password@localhost:3306/mydatabase"';
-        idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
+        idField = `  id String @id @default(uuid())\n`;
         break;
       case "MongoDB":
         dbProvider = "mongodb";
         dbUrlEnvVar =
           'DATABASE_URL="mongodb://username:password@localhost:27017/mydatabase"';
-        idField = `  id String @id @default(uuid()) @map("_id")\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
+        idField = `  id String @id @default(uuid()) @map("_id")\n`;
         break;
       default:
         dbProvider = "postgresql";
         dbUrlEnvVar =
           'DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"';
-        idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
+        idField = `  id String @id @default(uuid())\n`;
     }
 
     schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
@@ -151,6 +151,10 @@ export class Prisma {
     }
 
     return this.models;
+  }
+  
+  setModels(models: ProjectModel[]) {
+    this.models = models;
   }
   
   async addUserModel(userModel: ProjectModel) {

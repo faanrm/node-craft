@@ -16,94 +16,51 @@ export class Template {
   async setupTemplate() {
     const templateDir = path.join(this.projectPath, "templates");
     await fs.ensureDir(templateDir);
-
     const templates = [
       {
-        name: "domain/entity-template.ejs",
+        name: "model-template.ts",
         content: await fs.readFile(
-          path.join(__dirname, "../templates/domain/entity-template.ejs"),
+          path.join(__dirname, "../templates/zod-model-template.ejs"),
           "utf-8"
         ),
       },
       {
-        name: "domain/repository-interface-template.ejs",
+        name: "service-template.ts",
         content: await fs.readFile(
-          path.join(
-            __dirname,
-            "../templates/domain/repository-interface-template.ejs"
-          ),
+          path.join(__dirname, "../templates/zod-service-template.ejs"),
           "utf-8"
         ),
       },
       {
-        name: "application/dto-template.ejs",
+        name: "controller-template.ts",
         content: await fs.readFile(
-          path.join(__dirname, "../templates/application/dto-template.ejs"),
+          path.join(__dirname, "../templates/zod-controller-template.ejs"),
           "utf-8"
         ),
       },
       {
-        name: "application/use-case-template.ejs",
+        name: "routes-template.ts",
         content: await fs.readFile(
-          path.join(
-            __dirname,
-            "../templates/application/use-case-template.ejs"
-          ),
+          path.join(__dirname, "../templates/routing-template.ejs"),
           "utf-8"
         ),
       },
       {
-        name: "infrastructure/repository-implementation-template.ejs",
+        name: "validator-middleware.ts",
         content: await fs.readFile(
-          path.join(
-            __dirname,
-            "../templates/infrastructure/repository-implementation-template.ejs"
-          ),
+          path.join(__dirname, "../templates/zod-middleware.ts"),
           "utf-8"
         ),
       },
       {
-        name: "interface/controller-template.ejs",
+        name: "interface-template.ts",
         content: await fs.readFile(
-          path.join(
-            __dirname,
-            "../templates/interface/controller-template.ejs"
-          ),
-          "utf-8"
-        ),
-      },
-      {
-        name: "interface/route-template.ejs",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/interface/route-template.ejs"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "interface/validation-middleware.ejs",
-        content: await fs.readFile(
-          path.join(
-            __dirname,
-            "../templates/interface/validation-middleware.ejs"
-          ),
-          "utf-8"
-        ),
-      },
-      {
-        name: "infrastructure/container-template.ejs",
-        content: await fs.readFile(
-          path.join(
-            __dirname,
-            "../templates/infrastructure/container-template.ejs"
-          ),
+          path.join(__dirname, "../templates/interface-template.ejs"),
           "utf-8"
         ),
       },
     ];
-
     for (const template of templates) {
-      const dirPath = path.dirname(path.join(templateDir, template.name));
-      await fs.ensureDir(dirPath);
       await fs.writeFile(
         path.join(templateDir, template.name),
         template.content
@@ -112,100 +69,88 @@ export class Template {
   }
 
   async codeTemplate() {
-    await fs.ensureDir(path.join(this.projectPath, "src/domain/entities"));
-    await fs.ensureDir(path.join(this.projectPath, "src/domain/repositories"));
-    await fs.ensureDir(path.join(this.projectPath, "src/domain/services"));
-    let containerRegistrations = [];
-
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/application/use-cases")
-    );
-    await fs.ensureDir(path.join(this.projectPath, "src/application/dtos"));
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/application/interfaces")
-    );
-
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/infrastructure/database")
-    );
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/infrastructure/repositories")
-    );
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/infrastructure/services")
-    );
-
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/interface/http/controllers")
-    );
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/interface/http/middlewares")
-    );
-    await fs.ensureDir(
-      path.join(this.projectPath, "src/interface/http/routes")
-    );
-    await fs.ensureDir(path.join(this.projectPath, "src/interface/validators"));
-
-    await fs.ensureDir(path.join(this.projectPath, "src/shared/utils"));
-    await fs.ensureDir(path.join(this.projectPath, "src/shared/config"));
+    await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
+    await fs.ensureDir(path.join(this.projectPath, "src/models"));
+    await fs.ensureDir(path.join(this.projectPath, "src/services"));
+    await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
+    await fs.ensureDir(path.join(this.projectPath, "src/routes"));
+    await fs.ensureDir(path.join(this.projectPath, "src/interfaces")); 
 
     await fs.writeFile(
-      path.join(
-        this.projectPath,
-        "src/interface/http/middlewares/validation.middleware.ts"
-      ),
+      path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
-        path.join(
-          this.projectPath,
-          "templates/interface/validation-middleware.ejs"
-        ),
+        path.join(this.projectPath, "templates/validator-middleware.ts"),
         "utf-8"
       )
     );
 
-    //   let containerContent = "";
-
     for (const model of this.models) {
       if (model.name === "User" && this.isAuth) {
+        const interfaceContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/interface-template.ts"),
+            "utf-8"
+          ),
+          { model }
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/interfaces/${model.name.toLowerCase()}.interface.ts`
+          ),
+          interfaceContent
+        );
+
+        const serviceContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/service-template.ts"),
+            "utf-8"
+          ),
+          { model }
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/services/${model.name.toLowerCase()}.service.ts`
+          ),
+          serviceContent
+        );
+
+        const controllerContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/controller-template.ts"),
+            "utf-8"
+          ),
+          { model }
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/controllers/${model.name.toLowerCase()}.controller.ts`
+          ),
+          controllerContent
+        );
+
+        const routeContent = await ejs.render(
+          await fs.readFile(
+            path.join(this.projectPath, "templates/routes-template.ts"),
+            "utf-8"
+          ),
+          { model }
+        );
+        await fs.writeFile(
+          path.join(
+            this.projectPath,
+            `src/routes/${model.name.toLowerCase()}.routes.ts`
+          ),
+          routeContent
+        );
         continue;
       }
 
-      const entityContent = await ejs.render(
+      const modelContent = await ejs.render(
         await fs.readFile(
-          path.join(this.projectPath, "templates/domain/entity-template.ejs"),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/domain/entities/${model.name.toLowerCase()}.ts`
-        ),
-        entityContent
-      );
-
-      const repositoryInterfaceContent = await ejs.render(
-        await fs.readFile(
-          path.join(
-            this.projectPath,
-            "templates/domain/repository-interface-template.ejs"
-          ),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/domain/repositories/${model.name.toLowerCase()}.repository.ts`
-        ),
-        repositoryInterfaceContent
-      );
-
-      const dtoContent = await ejs.render(
-        await fs.readFile(
-          path.join(this.projectPath, "templates/application/dto-template.ejs"),
+          path.join(this.projectPath, "templates/model-template.ts"),
           "utf-8"
         ),
         {
@@ -216,17 +161,28 @@ export class Template {
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/application/dtos/${model.name.toLowerCase()}.dto.ts`
+          `src/models/${model.name.toLowerCase()}.model.ts`
         ),
-        dtoContent
+        modelContent
+      );
+      const interfaceContent = await ejs.render(
+        await fs.readFile(
+          path.join(this.projectPath, "templates/interface-template.ts"),
+          "utf-8",
+        ),
+        { model },
+      );
+      await fs.writeFile(
+        path.join(
+          this.projectPath,
+          `src/interfaces/${model.name.toLowerCase()}.interface.ts`,
+        ),
+        interfaceContent,
       );
 
-      const useCaseContent = await ejs.render(
+      const serviceContent = await ejs.render(
         await fs.readFile(
-          path.join(
-            this.projectPath,
-            "templates/application/use-case-template.ejs"
-          ),
+          path.join(this.projectPath, "templates/service-template.ts"),
           "utf-8"
         ),
         { model }
@@ -234,35 +190,14 @@ export class Template {
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/application/use-cases/${model.name.toLowerCase()}.use-case.ts`
+          `src/services/${model.name.toLowerCase()}.service.ts`
         ),
-        useCaseContent
-      );
-
-      const repositoryImplContent = await ejs.render(
-        await fs.readFile(
-          path.join(
-            this.projectPath,
-            "templates/infrastructure/repository-implementation-template.ejs"
-          ),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/infrastructure/repositories/${model.name.toLowerCase()}.repository.ts`
-        ),
-        repositoryImplContent
+        serviceContent
       );
 
       const controllerContent = await ejs.render(
         await fs.readFile(
-          path.join(
-            this.projectPath,
-            "templates/interface/controller-template.ejs"
-          ),
+          path.join(this.projectPath, "templates/controller-template.ts"),
           "utf-8"
         ),
         { model }
@@ -270,14 +205,14 @@ export class Template {
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/interface/http/controllers/${model.name.toLowerCase()}.controller.ts`
+          `src/controllers/${model.name.toLowerCase()}.controller.ts`
         ),
         controllerContent
       );
 
       const routeContent = await ejs.render(
         await fs.readFile(
-          path.join(this.projectPath, "templates/interface/route-template.ejs"),
+          path.join(this.projectPath, "templates/routes-template.ts"),
           "utf-8"
         ),
         { model }
@@ -285,45 +220,11 @@ export class Template {
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/interface/http/routes/${model.name.toLowerCase()}.routes.ts`
+          `src/routes/${model.name.toLowerCase()}.routes.ts`
         ),
         routeContent
       );
-
-      const containerReg = await ejs.render(
-        await fs.readFile(
-          path.join(
-            this.projectPath,
-            "templates/infrastructure/container-template.ejs"
-          ),
-          "utf-8"
-        ),
-        { model }
-      );
-      containerRegistrations.push(containerReg);
     }
-    const containerContent = containerRegistrations.join("\n");
-    let authContainerContent = "";
-    if (this.isAuth) {
-      authContainerContent = `
-  import { PrismaUserRepository } from './repositories/user.repository';
-  import { AuthUseCase } from '../application/auth-use-case';
-  import { AuthController } from '../interface/http/controllers/auth.controller';
-  
-  container.registerSingleton('IUserRepository', PrismaUserRepository);
-  container.registerSingleton(AuthUseCase);
-  container.registerSingleton(AuthController);
-  `;
-    }
-
-    await fs.writeFile(
-      path.join(this.projectPath, "src/infrastructure/container.ts"),
-      `import 'reflect-metadata';\nimport { container } from 'tsyringe';\nimport { PrismaClient } from '@prisma/client';\n\n${containerContent}\n\n${authContainerContent}\n// Register PrismaClient\ncontainer.registerSingleton('PrismaClient', PrismaClient);\n\nexport { container };`
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/infrastructure/container.ts"),
-      `import 'reflect-metadata';\nimport { container } from 'tsyringe';\nimport { PrismaClient } from '@prisma/client';\n\n${containerContent}\n\n// Register PrismaClient\ncontainer.registerSingleton('PrismaClient', PrismaClient);\n\nexport { container };`
-    );
 
     const mainContent = await ejs.render(
       await fs.readFile(
@@ -340,7 +241,6 @@ export class Template {
       path.join(this.projectPath, "src/index.ts"),
       mainContent
     );
-
     await fs.remove(path.join(this.projectPath, "templates"));
   }
 

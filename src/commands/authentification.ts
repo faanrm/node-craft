@@ -6,6 +6,8 @@ export class Authentification {
   constructor(private projectPath: string) {}
 
   async setupAuthentication() {
+    console.log("Setting up authentication...");
+
     const userModel: ProjectModel = {
       name: "User",
       fields: [
@@ -37,17 +39,19 @@ export class Authentification {
     };
 
     try {
-      await fs.ensureDir(path.join(this.projectPath, "src/domain"));
-      await fs.ensureDir(path.join(this.projectPath, "src/application"));
-      await fs.ensureDir(path.join(this.projectPath, "src/infrastructure/repositories"));
-      await fs.ensureDir(path.join(this.projectPath, "src/interface/http/controllers"));
-      await fs.ensureDir(path.join(this.projectPath, "src/interface/http/middlewares"));
-      await fs.ensureDir(path.join(this.projectPath, "src/interface/http/routes"));
+      await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
+      await fs.ensureDir(path.join(this.projectPath, "src/models"));
+      await fs.ensureDir(path.join(this.projectPath, "src/services"));
+      await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
+      await fs.ensureDir(path.join(this.projectPath, "src/routes"));
 
       await this.copyAuthTemplates();
+
       await this.updatePackageJson();
+
       await this.updateEnvWithJwtSecret();
 
+      console.log("Authentication setup completed successfully");
       return userModel;
     } catch (error) {
       console.error("Error setting up authentication:", error);
@@ -57,77 +61,40 @@ export class Authentification {
 
   private async copyAuthTemplates() {
     await fs.writeFile(
-      path.join(this.projectPath, "src/interface/http/middlewares/auth.middleware.ts"),
+      path.join(this.projectPath, "src/middleware/auth.middleware.ts"),
       await fs.readFile(
-        path.join(__dirname, "../templates/interface/auth-middleware.ts"),
+        path.join(__dirname, "../templates/auth/auth-middleware.ejs"),
         "utf-8"
       )
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/domain/entities/user.ts"),
+      path.join(this.projectPath, "src/models/user.model.ts"),
       await fs.readFile(
-        path.join(__dirname, "../templates/domain/user.entity.ts"),
+        path.join(__dirname, "../templates/auth/user-model.ejs"),
+        "utf-8"
+      )
+    );
+    await fs.writeFile(
+      path.join(this.projectPath, "src/services/auth.service.ts"),
+      await fs.readFile(
+        path.join(__dirname, "../templates/auth/auth-service.ejs"),
         "utf-8"
       )
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/domain/repositories/user-repository.ts"),
+      path.join(this.projectPath, "src/controllers/auth.controller.ts"),
       await fs.readFile(
-        path.join(__dirname, "../templates/domain/user-repository.ts"),
+        path.join(__dirname, "../templates/auth/auth-controller.ejs"),
         "utf-8"
       )
     );
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/application/dtos/user-dtos.ts"),
+      path.join(this.projectPath, "src/routes/auth.routes.ts"),
       await fs.readFile(
-        path.join(__dirname, "../templates/application/user-dtos.ts"),
-        "utf-8"
-      )
-    );
-
-    await fs.writeFile(
-      path.join(this.projectPath, "src/application/use-cases/auth-use-case.ts"),
-      await fs.readFile(
-        path.join(__dirname, "../templates/application/auth-use-case.ts"),
-        "utf-8"
-      )
-    );
-
-    await fs.writeFile(
-      path.join(
-        this.projectPath,
-        "src/infrastructure/repositories/user.repository.ts"
-      ),
-      await fs.readFile(
-        path.join(
-          __dirname,
-          "../templates/infrastructure/user-repository-implementation.ts"
-        ),
-        "utf-8"
-      )
-    );
-
-    await fs.writeFile(
-      path.join(
-        this.projectPath,
-        "src/interface/http/controllers/auth.controller.ts"
-      ),
-      await fs.readFile(
-        path.join(__dirname, "../templates/interface/auth-controller.ts"),
-        "utf-8"
-      )
-    );
-
-    await fs.writeFile(
-      path.join(
-        this.projectPath,
-        "src/interface/http/routes/auth.routes.ts"
-      ),
-      await fs.readFile(
-        path.join(__dirname, "../templates/interface/auth-routes.ts"),
+        path.join(__dirname, "../templates/auth/auth-routes.ejs"),
         "utf-8"
       )
     );

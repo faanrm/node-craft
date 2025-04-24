@@ -8,14 +8,13 @@ export class Package {
   async generatePackageJson() {
     const packageJson = {
       name: path.basename(this.projectPath),
-      description: "Clean architecture Node.js project",
-      main: "dist/index.js",
+      description: "Generated project by node-craft",
+      main: "dist/index.ts",
       scripts: {
         start: "nodemon",
         build: "tsc",
         generate: "prisma generate",
         migrate: "prisma db push",
-        test: "jest",
       },
       dependencies: {
         express: "^4.18.2",
@@ -26,8 +25,6 @@ export class Package {
         cors: "^2.8.5",
         "@prisma/client": "^6.5.0",
         dotenv: "^16.0.3",
-        tsyringe: "^4.8.0",
-        "reflect-metadata": "^0.1.13",
       },
       devDependencies: {
         "@types/express": "^4.17.17",
@@ -38,12 +35,8 @@ export class Package {
         "@types/morgan": "^1.9.9",
         "ts-node": "^10.9.2",
         typescript: "^5.2.2",
-        jest: "^29.7.0",
-        "@types/jest": "^29.5.5",
-        "ts-jest": "^29.1.1",
       },
     };
-    
     await fs.writeJSON(
       path.join(this.projectPath, "package.json"),
       packageJson,

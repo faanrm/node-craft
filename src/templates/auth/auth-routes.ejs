@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import AuthController from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth.middleware';
+import { validateRequest } from '../middleware/validator-middleware';
+import { UserModel } from '../models/user.model';
+
+const router = Router();
+
+router.post('/register', validateRequest(UserModel.schema), AuthController.register);
+router.post('/login', validateRequest(UserModel.loginSchema), AuthController.login);
+router.get('/me', authenticate, AuthController.me);
+
+export default router;

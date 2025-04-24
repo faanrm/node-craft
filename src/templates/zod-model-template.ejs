@@ -1,0 +1,77 @@
+import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
+
+export class <%= model.name %>Model {
+  private prisma: PrismaClient;
+  
+ static schema = z.object({
+    <% model.fields.forEach(function(field, index) { %>
+    <%= field.name %>: <%= getZodValidator(field) %><%= index < model.fields.length - 1 ? ',' : '' %>
+    <% }); %>
+  });
+
+  constructor() {
+    this.prisma = new PrismaClient();
+  }
+
+  <% model.fields.forEach(function(field) { %>
+    /**
+     * Attribut <%= field.name %> 
+     * Type: <%= field.type %>
+     * <%= field.isOptional ? 'Optionnel' : 'Obligatoire' %>
+     * <%= field.isUnique ? 'Unique' : '' %>
+     */
+  <% }); %>
+
+ static validate(data: unknown) {
+    return this.schema.parse(data);
+  }
+
+ static validatePartial(data: unknown) {
+    return this.schema.partial().parse(data);
+  }
+}
+
+<%
+function getZodValidator(field) {
+  let validator = 'z';
+  
+ switch(field.type) {
+    case 'String':
+      validator += '.string()';
+      break;
+    case 'Int':
+      validator += '.number().int()';
+      break;
+    case 'Float':
+      validator += '.number()';
+      break;
+    case 'Boolean':
+      validator += '.boolean()';
+      break;
+    case 'DateTime':
+      validator += '.date()';
+      break;
+    case 'Json':
+      validator += '.record(z.any())';
+      break;
+    default:
+     if (field.isRelation) {
+        validator += '.object({})'; 
+      } else {
+        validator += '.any()';
+      }
+  }
+  
+ if (field.isUnique) {
+  }
+  
+  if (field.isOptional) {
+    validator += '.optional()';
+  } 
+  
+  return validator;
+}
+%>
+
+export default new <%= model.name %>Model();

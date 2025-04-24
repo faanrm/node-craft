@@ -70,12 +70,8 @@ export class Project {
     if (projectDetails.authentification) {
       try {
         const userModel = await this.authService.setupAuthentication();
-
         await this.prismaService.addUserModel(userModel);
-
         models.push(userModel);
-
-        this.templateService = new Template(this.projectPath, true);
       } catch (error) {
         console.error("Error setting up authentication:", error);
       }
@@ -96,21 +92,13 @@ export class Project {
 
   async generateProjectStructure() {
     const directories = [
-      "src/domain/entities",
-      "src/domain/repositories",
-      "src/domain/services",
-      "src/application/use-cases",
-      "src/application/dtos",
-      "src/application/interfaces",
-      "src/infrastructure/database",
-      "src/infrastructure/repositories",
-      "src/infrastructure/services",
-      "src/interface/http/controllers",
-      "src/interface/http/middlewares",
-      "src/interface/http/routes",
-      "src/interface/validators",
-      "src/shared/utils",
-      "src/shared/config",
+      "src/models",
+      "src/controllers",
+      "src/routes",
+      "src/services",
+      "src/utils",
+      // "src/middlewares",
+      "src/validators",
       "prisma",
     ];
 
