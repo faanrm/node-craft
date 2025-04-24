@@ -30,7 +30,11 @@ export class Prisma {
           await stringValidations(field);
         } else if (field.type === "Int" || field.type === "Float") {
           await numberValidations(field);
-        } else if (field.type === "Enum" && field.enumName && field.enumValues) {
+        } else if (
+          field.type === "Enum" &&
+          field.enumName &&
+          field.enumValues
+        ) {
           this.enums.set(field.enumName, field.enumValues);
           field.type = field.enumName;
         }
@@ -43,7 +47,7 @@ export class Prisma {
     await this.generatePrismaSchema();
     return this.models;
   }
-  
+
   async generatePrismaSchema() {
     await fs.ensureDir(path.join(this.projectPath, "prisma"));
 
@@ -56,19 +60,19 @@ export class Prisma {
         dbProvider = "mysql";
         dbUrlEnvVar =
           'DATABASE_URL="mysql://username:password@localhost:3306/mydatabase"';
-        idField = `  id String @id @default(uuid())\n`;
+        idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
         break;
       case "MongoDB":
         dbProvider = "mongodb";
         dbUrlEnvVar =
           'DATABASE_URL="mongodb://username:password@localhost:27017/mydatabase"';
-        idField = `  id String @id @default(uuid()) @map("_id")\n`;
+        idField = `  id String @id @default(uuid()) @map("_id")\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
         break;
       default:
         dbProvider = "postgresql";
         dbUrlEnvVar =
           'DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"';
-        idField = `  id String @id @default(uuid())\n`;
+        idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
     }
 
     schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
@@ -129,7 +133,7 @@ export class Prisma {
           } else {
             fieldLine += field.type;
           }
-          
+
           if (field.isOptional) fieldLine += "?";
           if (field.isUnique) fieldLine += " @unique";
           schemaContent += fieldLine + "\n";
@@ -152,11 +156,11 @@ export class Prisma {
 
     return this.models;
   }
-  
+
   setModels(models: ProjectModel[]) {
     this.models = models;
   }
-  
+
   async addUserModel(userModel: ProjectModel) {
     const existingUserModelIndex = this.models.findIndex(
       (m) => m.name === "User"
