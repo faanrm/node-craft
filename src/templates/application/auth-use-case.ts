@@ -1,6 +1,6 @@
-import { User } from '../domain/user.entity';
-import type { IUserRepository } from '../domain/user-repository';
-import  type { CreateUserDTO , LoginDTO } from './user-dtos';
+import { User } from '../../domain/entities/user';
+import type { IUserRepository } from '../../domain/repositories/user-repository';
+import  type { CreateUserDTO , LoginDTO } from '../dtos/user-dtos';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { AuthUseCase } from '../application/auth-use-case';
-import  type { CreateUserDTO , LoginDTO } from '../application/user-dtos';
+import { AuthUseCase } from '../../../application/use-cases/auth-use-case';
+import  type { CreateUserDTO , LoginDTO } from '../../../application/dtos/user-dtos';
 
 export class AuthController {
   constructor(private authUseCase: AuthUseCase) {}

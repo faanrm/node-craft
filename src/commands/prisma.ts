@@ -147,7 +147,7 @@ export class Prisma {
         path.join(this.projectPath, "prisma", "schema.prisma"),
         schemaContent
       );
-      console.log("Schema generated successfully.");
+      //console.log("tonga aty ve ? .");
     } catch (error) {
       console.error("Error generating schema:", error);
       throw error;
