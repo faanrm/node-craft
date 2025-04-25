@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-
 import { Package } from "../src/commands/package";
 import { Prisma } from "../src/commands/prisma";
 import { Template } from "../src/commands/template";
@@ -16,7 +15,7 @@ const project = new Project(
   packageService,
   prismaService,
   templateService,
-  projectPath
+  projectPath,
 );
 
 new CLI(project);
