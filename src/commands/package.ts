@@ -23,6 +23,7 @@ export class Package {
         helmet: "^8.1.0",
         morgan: "^1.10.0",
         cors: "^2.8.5",
+        winston : "^3.17.0",
         "@prisma/client": "^6.5.0",
         dotenv: "^16.0.3",
       },
