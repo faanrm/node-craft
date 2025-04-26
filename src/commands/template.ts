@@ -59,6 +59,13 @@ export class Template {
           "utf-8"
         ),
       },
+      {
+        name: "error-middleware.ts",
+        content: await fs.readFile(
+          path.join(__dirname, "../templates/error.middleware.ts"),
+          "utf-8"
+        ),
+      },
     ];
     for (const template of templates) {
       await fs.writeFile(
@@ -74,12 +81,19 @@ export class Template {
     await fs.ensureDir(path.join(this.projectPath, "src/services"));
     await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
     await fs.ensureDir(path.join(this.projectPath, "src/routes"));
-    await fs.ensureDir(path.join(this.projectPath, "src/interfaces")); 
+    await fs.ensureDir(path.join(this.projectPath, "src/interfaces"));
 
     await fs.writeFile(
       path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
       await fs.readFile(
         path.join(this.projectPath, "templates/validator-middleware.ts"),
+        "utf-8"
+      )
+    );
+    await fs.writeFile(
+      path.join(this.projectPath, "src/middleware/error.middleware.ts"),
+      await fs.readFile(
+        path.join(this.projectPath, "templates/error-middleware.ts"),
         "utf-8"
       )
     );
@@ -168,16 +182,16 @@ export class Template {
       const interfaceContent = await ejs.render(
         await fs.readFile(
           path.join(this.projectPath, "templates/interface-template.ts"),
-          "utf-8",
+          "utf-8"
         ),
-        { model },
+        { model }
       );
       await fs.writeFile(
         path.join(
           this.projectPath,
-          `src/interfaces/${model.name.toLowerCase()}.interface.ts`,
+          `src/interfaces/${model.name.toLowerCase()}.interface.ts`
         ),
-        interfaceContent,
+        interfaceContent
       );
 
       const serviceContent = await ejs.render(
