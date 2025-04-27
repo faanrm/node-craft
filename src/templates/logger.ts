@@ -2,7 +2,6 @@ import winston from 'winston';
 import path from 'path';
 import fs from 'fs-extra';
 
-// Ensure logs directory exists
 const logDir = 'logs';
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
