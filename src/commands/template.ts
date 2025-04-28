@@ -25,6 +25,13 @@ export class Template {
         ),
       },
       {
+        name: "logger.ts",
+        content: await fs.readFile(
+          path.join(__dirname, "../templates/logger.ts"),
+          "utf-8"
+        ),
+      },
+      {
         name: "service-template.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/zod-service-template.ejs"),
@@ -94,6 +101,13 @@ export class Template {
       path.join(this.projectPath, "src/middleware/error.middleware.ts"),
       await fs.readFile(
         path.join(this.projectPath, "templates/error-middleware.ts"),
+        "utf-8"
+      )
+    );
+    await fs.writeFile(
+      path.join(this.projectPath, "src/utils/logger.ts"),
+      await fs.readFile(
+        path.join(this.projectPath, "templates/logger.ts"),
         "utf-8"
       )
     );
