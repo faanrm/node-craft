@@ -1,4 +1,4 @@
-# node-craft
+# node-craft:
 
 To install dependencies:
 
