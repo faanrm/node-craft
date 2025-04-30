@@ -18,6 +18,12 @@ export class Template {
     await fs.ensureDir(templateDir);
     const templates = [
       {
+        name :"config.ts",
+        content : await fs.readFile(
+          path.join(__dirname , "../templates/config.ts"),"utf-8",
+        )
+      },
+      {
         name: "model-template.ts",
         content: await fs.readFile(
           path.join(__dirname, "../templates/zod-model-template.ejs"),
@@ -98,6 +104,12 @@ export class Template {
         "utf-8",
       ),
     );
+    await fs.writeFile(
+      path.join(this.projectPath,"src/utils/config.ts"),
+      await fs.readFile(
+        path.join(this.projectPath,"templates/config.ts"),"utf-8",
+      )
+    )
     await fs.writeFile(
       path.join(this.projectPath, "src/utils/logger.ts"),
       await fs.readFile(
