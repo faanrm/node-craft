@@ -26,6 +26,8 @@ export class Package {
         winston: "^3.8.2",
         "@prisma/client": "^6.5.0",
         dotenv: "^16.0.3",
+        "express-rate-limit": "^6.7.0",
+        "xss-clean": "^0.1.4",
       },
       devDependencies: {
         "@types/express": "^4.17.17",
