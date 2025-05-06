@@ -1,9 +1,12 @@
 import express from 'express';
 import cors from 'cors';
-import { Request, Response } from 'express';
-import helmet from 'helmet';
+import { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import { setupSecurity } from './middleware/security.middleware';
+import { errorHandler } from './middleware/error.middleware';
+import { logger } from './utils/logger';
+import config from './utils/config';
 
 <% if (isAuth) { %>
 import authRouter from './routes/auth.routes';
@@ -17,14 +20,30 @@ import <%= model.name.toLowerCase() %>Router from './routes/<%= model.name.toLow
 <% } %>
 <% } %>
 
-const app = express();
-const PORT = process.env.PORT || 3000;
 dotenv.config();
+const app = express();
+const PORT = config.server.port;
+
+app.use(morgan('combined', {
+  stream: {
+    write: (message: string) => {
+      logger.info(message.trim());
+    }
+  }
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(helmet());
-app.use(morgan('dev'));
+
+
+app.use(cors({
+  origin: config.server.cors.origin,
+  methods: config.server.cors.methods,
+  credentials: true
+}));
+
+setupSecurity(app);
+
 
 <% if (isAuth) { %>
 app.use('/api/auth', authRouter);
@@ -42,26 +61,32 @@ app.use('/api/<%= model.name.toLowerCase() %>s', <%= model.name.toLowerCase() %>
 <% } %>
 <% } %>
 
-app.get('/hello', (req:Request, res:Response) => {
+app.get('/hello', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
     message: '<%= projectName %> API is running',
+    version: process.env.npm_package_version || '1.0.0',
+    environment: config.server.env,
     timestamp: new Date().toISOString()
   });
 });
 
-
-app.use((req:Request, res:Response) => {
+app.use((req: Request, res: Response) => {
   res.status(404).json({
     status: 'error',
     message: 'Endpoint not found',
+    path: req.originalUrl,
     timestamp: new Date().toISOString()
   });
 });
 
+app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`<%= projectName %> API running on port ${PORT}`);
-});
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info(`<%= projectName %> API running on port ${PORT} in ${config.server.env} mode`);
+  });
+}
 
 export default app;
