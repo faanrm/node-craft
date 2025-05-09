@@ -11,7 +11,6 @@ const swaggerOptions = {
       description: 'API documentation for the Node.js application',
       contact: {
         name: 'API Support',
-        email: 'support@example.com',
       },
     },
     servers: [
