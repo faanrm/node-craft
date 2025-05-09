@@ -18,9 +18,9 @@ export class Template {
     await fs.ensureDir(templateDir);
     const templates = [
       {
-        name: "security-middleware.ts",
+        name: "swagger.ts",
         content: await fs.readFile(
-          path.join(__dirname, "../templates/security-middleware.ts"),
+          path.join(__dirname, "../templates/swagger.ts"),
           "utf-8"
         ),
       },
@@ -106,9 +106,9 @@ export class Template {
     await fs.ensureDir(path.join(this.projectPath, "src/utils"));
 
     await fs.writeFile(
-      path.join(this.projectPath, "src/middleware/security-middleware.ts"),
+      path.join(this.projectPath, "src/utils/swagger.ts"),
       await fs.readFile(
-        path.join(this.projectPath, "templates/security-middleware.ts"),
+        path.join(this.projectPath, "templates/swagger.ts"),
         "utf-8"
       )
     );

@@ -3,10 +3,10 @@ import cors from 'cors';
 import { Request, Response, NextFunction } from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import { setupSecurity } from './middleware/security-middleware'
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 import config from './utils/config';
+import { setupSwagger } from './utils/swagger';
 
 <% if (isAuth) { %>
 import authRouter from './routes/auth.routes';
@@ -24,6 +24,7 @@ dotenv.config();
 const app = express();
 const PORT = config.server.port;
 
+setupSwagger(app);
 app.use(morgan('combined', {
   stream: {
     write: (message: string) => {
@@ -42,7 +43,6 @@ app.use(cors({
   credentials: true
 }));
 
-setupSecurity(app);
 
 
 <% if (isAuth) { %>
