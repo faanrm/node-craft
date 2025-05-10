@@ -35,7 +35,7 @@ export class Package {
         "@types/express": "^4.17.17",
         "@types/node": "^20.6.0",
         nodemon: "^3.0.1",
-       "@types/fs-extra":"^11.0.4",
+        "@types/fs-extra": "^11.0.4",
         "@types/swagger-jsdoc": "^6.0.1",
         "@types/swagger-ui-express": "^4.1.3",
         "@types/cors": "^2.8.17",
@@ -48,7 +48,7 @@ export class Package {
     await fs.writeJSON(
       path.join(this.projectPath, "package.json"),
       packageJson,
-      { spaces: 2 }
+      { spaces: 2 },
     );
   }
   async createTsConfig() {
