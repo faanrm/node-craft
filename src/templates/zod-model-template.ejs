@@ -1,6 +1,30 @@
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     <%= model.name %>:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The <%= model.name %> ID
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ *         <% for (const field of model.fields) { %>
+ *         <%= field.name %>:
+ *           type: <%= field.type.toLowerCase() === 'int' ? 'integer' : field.type.toLowerCase() %>
+ *           description: <%= field.name %> of the <%= model.name %>
+ *           <% if (field.isOptional) { %>required: false<% } %>
+ *         <% } %>
+ */
 export class <%= model.name %>Model {
   private prisma: PrismaClient;
   
