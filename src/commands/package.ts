@@ -30,6 +30,7 @@ export class Package {
         "xss-clean": "^0.1.4",
         "swagger-jsdoc": "^6.2.8",
         "swagger-ui-express": "^4.6.3",
+        "fs-extra": "^11.3.0",
       },
       devDependencies: {
         "@types/express": "^4.17.17",
