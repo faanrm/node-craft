@@ -6,6 +6,153 @@ import { UserModel } from '../models/user.model';
 
 const router = Router();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The user ID
+ *           example: 123e4567-e89b-12d3-a456-426614174000
+ *         email:
+ *           type: string
+ *           description: User email address
+ *           format: email
+ *         name:
+ *           type: string
+ *           description: User's full name
+ *         role:
+ *           type: string
+ *           description: User role (user, admin, etc.)
+ *           default: user
+ *       required:
+ *         - email
+ *     UserRegistration:
+ *       type: object
+ *       properties:
+ *         email:
+ *           type: string
+ *           description: User email address
+ *           format: email
+ *         password:
+ *           type: string
+ *           description: User password (min 6 characters)
+ *           format: password
+ *         name:
+ *           type: string
+ *           description: User's full name
+ *         role:
+ *           type: string
+ *           description: User role
+ *           default: user
+ *       required:
+ *         - email
+ *         - password
+ *     UserLogin:
+ *       type: object
+ *       properties:
+ *         email:
+ *           type: string
+ *           description: User email address
+ *           format: email
+ *         password:
+ *           type: string
+ *           description: User password
+ *           format: password
+ *       required:
+ *         - email
+ *         - password
+ *     AuthResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Response message
+ *         token:
+ *           type: string
+ *           description: JWT authentication token
+ *         user:
+ *           $ref: '#/components/schemas/User'
+ * 
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserRegistration'
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User registered successfully
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       409:
+ *         description: User already exists
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ * 
+ * /auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UserLogin'
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       401:
+ *         description: Invalid credentials
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ * 
+ * /auth/me:
+ *   get:
+ *     summary: Get current authenticated user
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Server error
+ */
+
 router.post('/register', validateRequest(UserModel.schema), AuthController.register);
 router.post('/login', validateRequest(UserModel.loginSchema), AuthController.login);
 router.get('/me', authenticate, AuthController.me);
