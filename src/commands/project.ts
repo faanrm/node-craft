@@ -87,7 +87,6 @@ export class Project {
         `✅ Project ${projectDetails.projectName} created successfully!`
       )
     );
-    //console.log(chalk.blue(`🧪 Zod validation integrated in the project!`));
   }
 
   async generateProjectStructure() {
@@ -97,8 +96,6 @@ export class Project {
       "src/routes",
       "src/services",
       "src/utils",
-      // "src/middlewares",
-      "src/validators",
       "prisma",
     ];
 

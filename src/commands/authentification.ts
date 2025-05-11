@@ -6,8 +6,6 @@ export class Authentification {
   constructor(private projectPath: string) {}
 
   async setupAuthentication() {
-    console.log("Setting up authentication...");
-
     const userModel: ProjectModel = {
       name: "User",
       fields: [
