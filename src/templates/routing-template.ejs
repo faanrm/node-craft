@@ -10,7 +10,139 @@ const router = Router();
  * components:
  *   schemas:
  *     <%= model.name %>:
- *       $ref: '../swagger/schemas/<%= model.name.toLowerCase() %>.yml#/<%= model.name %>'
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: The <%= model.name %> ID
+ *           example: 123e4567-e89b-12d3-a456-426614174000
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Creation timestamp
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Last update timestamp
+ *         <% for (const field of model.fields) { %>
+ *         <%= field.name %>:
+ *           type: <%= field.type.toLowerCase() === 'int' ? 'integer' : field.type.toLowerCase() %>
+ *           description: <%= field.name %> of the <%= model.name %>
+ *           <% if (field.isOptional) { %>required: false<% } %>
+ *         <% } %>
+ *       required:
+ *         <% for (const field of model.fields) { %>
+ *         <% if (!field.isOptional) { %>- <%= field.name %>
+ *         <% } %>
+ *         <% } %>
+ * 
+ * /<%=model.name.toLowerCase()%>s:
+ *   post:
+ *     summary: Create a new <%= model.name %>
+ *     tags: [<%= model.name %>s]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/<%= model.name %>'
+ *     responses:
+ *       201:
+ *         description: The <%= model.name %> was successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/<%= model.name %>'
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ * 
+ *   get:
+ *     summary: Get all <%= model.name %>s
+ *     tags: [<%= model.name %>s]
+ *     responses:
+ *       200:
+ *         description: List of <%= model.name %>s
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/<%= model.name %>'
+ *       500:
+ *         description: Server error
+ * 
+ * /<%=model.name.toLowerCase()%>s/{id}:
+ *   get:
+ *     summary: Get a <%= model.name %> by ID
+ *     tags: [<%= model.name %>s]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The <%= model.name %> ID
+ *     responses:
+ *       200:
+ *         description: <%= model.name %> found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/<%= model.name %>'
+ *       404:
+ *         description: <%= model.name %> not found
+ *       500:
+ *         description: Server error
+ * 
+ *   put:
+ *     summary: Update a <%= model.name %> by ID
+ *     tags: [<%= model.name %>s]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The <%= model.name %> ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/<%= model.name %>'
+ *     responses:
+ *       200:
+ *         description: <%= model.name %> updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/<%= model.name %>'
+ *       404:
+ *         description: <%= model.name %> not found
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Server error
+ * 
+ *   delete:
+ *     summary: Delete a <%= model.name %> by ID
+ *     tags: [<%= model.name %>s]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The <%= model.name %> ID
+ *     responses:
+ *       200:
+ *         description: <%= model.name %> deleted successfully
+ *       404:
+ *         description: <%= model.name %> not found
+ *       500:
+ *         description: Server error
  */
 
 router.post('/', validateRequest(<%= model.name %>Model.schema), <%= model.name %>Controller.create);
@@ -20,4 +152,3 @@ router.put('/:id', validateRequest(<%= model.name %>Model.schema.partial()), <%=
 router.delete('/:id', <%= model.name %>Controller.delete);
 
 export default router;
-`;
