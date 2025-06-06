@@ -1,3 +1,4 @@
+//test dago life
 import { Template } from "./commands/template";
 import { Package } from "./commands/package";
 import { Prisma } from "./commands/prisma";
