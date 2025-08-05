@@ -3,15 +3,15 @@
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleDetection": "force",
     "allowJs": true,
 
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "noEmit": true,
+    // Node.js ES Modules mode
+    "moduleResolution": "NodeNext",
+    "verbatimModuleSyntax": false,
+    "noEmit": false,
+    "emitDeclarationOnly": false,
 
     // Best practices
     "strict": true,
@@ -22,6 +22,17 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
-  }
+    "noPropertyAccessFromIndexSignature": false,
+    "outDir": "./dist",
+    "rootDir": ".",
+  },
+  "include": [
+    "src/**/*",
+    "bin/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/templates/**/*"
+  ]
 }

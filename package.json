@@ -1,10 +1,14 @@
 {
-  "name": "node-craft",
+  "name": "@krakennn/node-craft",
   "description": "Generated project by node-craft",
-  "main": "dist/index.ts",
+  "main": "dist/bin/node-craft.js",
+  "version": "0.0.1",
+  "bin": {
+    "node-craft": "dist/bin/node-craft.js"
+  },
   "scripts": {
     "start": "nodemon",
-    "build": "tsc",
+    "build": "tsc --build --force && tsc --build --force && copyfiles --up 1 \"src/**/*.{ejs,html,json,yaml,jpg,png,ts}\" dist/src",
     "generate": "prisma generate",
     "migrate": "prisma db push"
   },
@@ -23,7 +27,12 @@
     "@types/express": "^4.17.17",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.6.0",
+    "copyfiles": "^2.4.1",
     "nodemon": "^3.0.1",
     "typescript": "^5.2.2"
-  }
+  },
+  "author": {
+    "name": "krakennn"
+  },
+  "license": "ISC"
 }

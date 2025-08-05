@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
