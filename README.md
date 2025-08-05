@@ -1,15 +1,25 @@
-# node-craft:
+# NodeCraft
 
-To install dependencies:
+A tool to quickly generate a Node.js project structure.
 
-```bash
-bun install
+
+### Quick Initialization
+
+NodeCraft quickly generates a Node.js project structure in a single command.
+
+### Basic Structure
+
+NodeCraft generates the essential folders and files to start a new project (e.g. a `src` folder, an `index.ts` file, etc.).
+
+### Easy to Use
+
+NodeCraft has a simple and intuitive command-line interface.
+
+## Installation
+
+To use NodeCraft, you need to install it globally on your machine. Make sure you have Node.js and npm (or yarn) installed.
+To install NodeCraft globally, run the following command:
+
+```sh
+npm i -g @krakennn/node-craft
 ```
-
-To run:
-
-```bash
-bun run src/index.ts
-```
-
-This project was created using `bun init` in bun v1.2.7. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

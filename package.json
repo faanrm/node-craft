@@ -2,7 +2,7 @@
   "name": "@krakennn/node-craft",
   "description": "Generated project by node-craft",
   "main": "dist/bin/node-craft.js",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "bin": {
     "node-craft": "dist/bin/node-craft.js"
   },
