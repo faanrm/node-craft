@@ -1,0 +1,11 @@
+import { FastifyInstance } from 'fastify';
+import <%= model.name %>Controller from '../controllers/<%= model.name.toLowerCase() %>.controller';
+import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
+
+export default async function (fastify: FastifyInstance) {
+  fastify.post('/', <%= model.name %>Controller.create);
+  fastify.get('/', <%= model.name %>Controller.findAll);
+  fastify.get('/:id', <%= model.name %>Controller.findById);
+  fastify.put('/:id', <%= model.name %>Controller.update);
+  fastify.delete('/:id', <%= model.name %>Controller.delete);
+}

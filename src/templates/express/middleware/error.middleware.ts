@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
 import { logger } from "../utils/logger";
 
 export enum HttpStatusCode {
@@ -69,7 +68,7 @@ export class ForbiddenError extends AppError {
 }
 
 export const errorHandler = (
-  err: Error,
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction,
@@ -79,7 +78,7 @@ export const errorHandler = (
   logger.error(`${req.method} ${req.path} - Error: ${err.message}`, {
     error: err.stack,
     requestId: req.headers["x-request-id"],
-    userId: req.user?.id,
+    userId: (req as any).user?.id,
   });
 
   if (err instanceof ZodError) {
@@ -96,7 +95,7 @@ export const errorHandler = (
         {} as Record<string, string>,
       ),
     };
-  } else if (err instanceof PrismaClientKnownRequestError) {
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
       case "P2002":
         apiError = {

@@ -1,0 +1,73 @@
+import Fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import dotenv from 'dotenv';
+import { logger } from './utils/logger';
+import config from './utils/config';
+
+dotenv.config();
+
+const app: FastifyInstance = Fastify({
+  logger: true
+});
+
+const PORT = config.server.port;
+
+const start = async () => {
+  // 1. Plugins
+  await app.register(cors, { origin: config.server.cors.origin });
+  await app.register(helmet);
+
+  // 2. GraphQL Setup
+  <% if (isGraphql) { %>
+  const { ApolloServer } = await import('@apollo/server');
+  const { default: fastifyApollo, fastifyApolloDrainPlugin } = await import('@as-integrations/fastify');
+  const { typeDefs } = await import('./graphql/schema');
+  const { resolvers } = await import('./graphql/resolvers');
+
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [fastifyApolloDrainPlugin(app)],
+  });
+
+  await server.start();
+  await app.register(fastifyApollo(server), {
+    context: async (request: any) => ({ user: request.user }),
+  });
+  logger.info('GraphQL support enabled');
+  <% } %>
+
+  // 3. REST Routes
+  <% if (isRest) { %>
+  <% for (const model of models) { %>
+  <% if (model.name !== "User") { %>
+  await app.register(import('./routes/<%= model.name.toLowerCase() %>.routes'), { prefix: '/api/<%= model.name.toLowerCase() %>s' });
+  <% } %>
+  <% } %>
+  logger.info('REST support enabled');
+  <% } %>
+
+  // 4. Hello Endpoint
+  app.get('/hello', async (request: FastifyRequest, reply: FastifyReply) => {
+    return {
+      status: 'OK',
+      message: '<%= projectName %> API is running (Fastify)',
+      version: '1.0.0',
+      environment: config.server.env,
+      timestamp: new Date().toISOString()
+    }
+  });
+
+  try {
+    await app.listen({ port: PORT, host: '0.0.0.0' });
+    logger.info(`<%= projectName %> API running on port ${PORT}`);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
+
+export default app;

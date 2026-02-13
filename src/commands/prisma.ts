@@ -17,6 +17,11 @@ export class Prisma {
     this.projectPath = projectPath;
   }
 
+  setProjectPath(projectPath: string, database?: string) {
+    this.projectPath = projectPath;
+    if (database) this.database = database;
+  }
+
   async generatePrismaModels() {
     while (true) {
       const modelName = await promptModelName();

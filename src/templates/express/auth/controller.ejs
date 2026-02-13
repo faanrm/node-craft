@@ -1,0 +1,55 @@
+import { Request, Response } from 'express';
+import AuthService from '../services/auth.service';
+import { catchAsync } from '../utils/catch-async';
+import { UnauthorizedError } from '../middleware/error.middleware';
+
+export class AuthController {
+  register = catchAsync(async (req: Request, res: Response) => {
+    const user = await AuthService.register(req.body);
+    
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  });
+
+  login = catchAsync(async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const result = await AuthService.login(email, password);
+    
+    res.status(200).json({
+      message: 'Login successful',
+      token: result.token,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role
+      }
+    });
+  });
+
+  me = catchAsync(async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+    
+    const user = await AuthService.getUserById(req.user.id);
+    
+    res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  });
+}
+
+export default new AuthController();

@@ -1,0 +1,18 @@
+import { Router } from 'express';
+import <%= model.name %>Controller from '../controllers/<%= model.name.toLowerCase() %>.controller';
+import { validateRequest } from '../middleware/validator-middleware';
+import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
+<% if (isAuth) { %>
+import { authenticate } from '../middleware/auth.middleware';
+<% } %>
+
+const router = Router();
+
+
+router.post('/', <% if (isAuth) { %>authenticate, <% } %>validateRequest(<%= model.name %>Model.schema), <%= model.name %>Controller.create);
+router.get('/', <% if (isAuth) { %>authenticate, <% } %><%= model.name %>Controller.findAll);
+router.get('/:id', <% if (isAuth) { %>authenticate, <% } %><%= model.name %>Controller.findById);
+router.put('/:id', <% if (isAuth) { %>authenticate, <% } %>validateRequest(<%= model.name %>Model.schema.partial()), <%= model.name %>Controller.update);
+router.delete('/:id', <% if (isAuth) { %>authenticate, <% } %><%= model.name %>Controller.delete);
+
+export default router;

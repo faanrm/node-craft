@@ -6,8 +6,15 @@ import dotenv from 'dotenv';
 import { errorHandler } from './middleware/error.middleware';
 import { logger } from './utils/logger';
 import config from './utils/config';
-import { setupSwagger } from './utils/swagger';
 
+<% if (isGraphql) { %>
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { typeDefs } from './graphql/schema';
+import { resolvers } from './graphql/resolvers';
+<% } %>
+
+<% if (isRest) { %>
 <% if (isAuth) { %>
 import authRouter from './routes/auth.routes';
 import userRouter from './routes/user.routes';
@@ -19,12 +26,13 @@ import userRouter from './routes/user.routes';
 import <%= model.name.toLowerCase() %>Router from './routes/<%= model.name.toLowerCase() %>.routes';
 <% } %>
 <% } %>
+<% } %>
 
 dotenv.config();
 const app = express();
 const PORT = config.server.port;
 
-setupSwagger(app);
+// 1. Initial middleware
 app.use(morgan('combined', {
   stream: {
     write: (message: string) => {
@@ -35,37 +43,54 @@ app.use(morgan('combined', {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
 app.use(cors({
   origin: config.server.cors.origin,
   methods: config.server.cors.methods,
   credentials: true
 }));
 
+// 2. Feature Setup
+const bootstrap = async () => {
+  <% if (isGraphql) { %>
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
 
+  await server.start();
+  app.use('/graphql', expressMiddleware(server, {
+    context: async ({ req }) => ({ user: (req as any).user }),
+  }));
+  logger.info('GraphQL support enabled at /graphql');
+  <% } %>
 
-<% if (isAuth) { %>
-app.use('/api/auth', authRouter);
-app.use('/api/users', userRouter);
-<% } else { %>
-<% let hasUserModel = models.some(model => model.name === "User"); %>
-<% if (hasUserModel) { %>
-app.use('/api/users', userRouter);
-<% } %>
-<% } %>
+  <% if (isRest) { %>
+  <% if (isAuth) { %>
+  app.use('/api/auth', authRouter);
+  app.use('/api/users', userRouter);
+  <% } else { %>
+  <% if (models.some(m => m.name === "User")) { %>
+  app.use('/api/users', userRouter);
+  <% } %>
+  <% } %>
 
-<% for (const model of models) { %>
-<% if (model.name !== "User") { %>
-app.use('/api/<%= model.name.toLowerCase() %>s', <%= model.name.toLowerCase() %>Router);
-<% } %>
-<% } %>
+  <% for (const model of models) { %>
+  <% if (model.name !== "User") { %>
+  app.use('/api/<%= model.name.toLowerCase() %>s', <%= model.name.toLowerCase() %>Router);
+  <% } %>
+  <% } %>
+  logger.info('REST support enabled at /api');
+  <% } %>
+};
 
+await bootstrap();
+
+// 3. Final middleware & Hello
 app.get('/hello', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
     message: '<%= projectName %> API is running',
-    version: process.env.npm_package_version || '1.0.0',
+    version: '1.0.0',
     environment: config.server.env,
     timestamp: new Date().toISOString()
   });
@@ -81,7 +106,6 @@ app.use((req: Request, res: Response) => {
 });
 
 app.use(errorHandler);
-
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {

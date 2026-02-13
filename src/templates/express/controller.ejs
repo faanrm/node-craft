@@ -1,0 +1,37 @@
+import { Request, Response, NextFunction } from 'express';
+import <%= model.name %>Service from '../services/<%= model.name.toLowerCase() %>.service';
+import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
+import { NotFoundError } from '../middleware/error.middleware';
+import { catchAsync } from '../utils/catch-async';
+
+export class <%= model.name %>Controller {
+  create = catchAsync(async (req: Request, res: Response) => {
+    const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.create(req.body as Create<%= model.name %>Input);
+    res.status(201).json(<%= model.name.toLowerCase() %>);
+  });
+
+  findAll = catchAsync(async (req: Request, res: Response) => {
+    const <%= model.name.toLowerCase() %>s = await <%= model.name %>Service.findAll();
+    res.json(<%= model.name.toLowerCase() %>s);
+  });
+
+  findById = catchAsync(async (req: Request, res: Response) => {
+    const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.findById(req.params.id);
+    if (!<%= model.name.toLowerCase() %>) {
+      throw new NotFoundError('<%= model.name %> not found');
+    }
+    res.json(<%= model.name.toLowerCase() %>);
+  });
+
+  update = catchAsync(async (req: Request, res: Response) => {
+    const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.update(req.params.id, req.body as Update<%= model.name %>Input);
+    res.json(<%= model.name.toLowerCase() %>);
+  });
+
+  delete = catchAsync(async (req: Request, res: Response) => {
+    await <%= model.name %>Service.delete(req.params.id);
+    res.status(204).send();
+  });
+}
+
+export default new <%= model.name %>Controller();

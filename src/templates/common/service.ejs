@@ -1,37 +1,34 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma, <%= model.name %> } from '@prisma/client';
+import prisma from '../utils/prisma';
 import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
 
 export class <%= model.name %>Service {
-  private prisma: PrismaClient;
+  private prisma = prisma;
 
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
-
-  async create(data: Create<%= model.name %>Input) {
+  async create(data: Create<%= model.name %>Input): Promise<<%= model.name %>> {
     return this.prisma.<%= model.name.toLowerCase() %>.create({ 
-      data: data as Prisma.<%= model.name %>CreateInput
+      data: data as any // Type assertion needed for complex relations or enums
     });
   }
 
-  async findAll() {
+  async findAll(): Promise<<%= model.name %>[]> {
     return this.prisma.<%= model.name.toLowerCase() %>.findMany();
   }
 
-  async findById(id: string) {
+  async findById(id: string): Promise<<%= model.name %> | null> {
     return this.prisma.<%= model.name.toLowerCase() %>.findUnique({ 
       where: { id } 
     });
   }
 
-  async update(id: string, data: Update<%= model.name %>Input) {
+  async update(id: string, data: Update<%= model.name %>Input): Promise<<%= model.name %>> {
     return this.prisma.<%= model.name.toLowerCase() %>.update({ 
       where: { id }, 
-      data: data as Prisma.<%= model.name %>UpdateInput
+      data: data as any
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string): Promise<<%= model.name %>> {
     return this.prisma.<%= model.name.toLowerCase() %>.delete({ 
       where: { id } 
     });

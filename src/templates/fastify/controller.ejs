@@ -1,0 +1,38 @@
+import { FastifyRequest, FastifyReply } from 'fastify';
+import <%= model.name %>Service from '../../services/<%= model.name.toLowerCase() %>.service';
+import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../../interfaces/<%= model.name.toLowerCase() %>.interface';
+
+export class <%= model.name %>Controller {
+  create = async (req: FastifyRequest, reply: FastifyReply) => {
+    const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.create(req.body as Create<%= model.name %>Input);
+    reply.code(201).send(<%= model.name.toLowerCase() %>);
+  };
+
+  findAll = async (req: FastifyRequest, reply: FastifyReply) => {
+    const <%= model.name.toLowerCase() %>s = await <%= model.name %>Service.findAll();
+    reply.send(<%= model.name.toLowerCase() %>s);
+  };
+
+  findById = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { id } = req.params as { id: string };
+    const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.findById(id);
+    if (!<%= model.name.toLowerCase() %>) {
+      return reply.callNotFound();
+    }
+    reply.send(<%= model.name.toLowerCase() %>);
+  };
+
+  update = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { id } = req.params as { id: string };
+    const <%= model.name.toLowerCase() %> = await <%= model.name %>Service.update(id, req.body as Update<%= model.name %>Input);
+    reply.send(<%= model.name.toLowerCase() %>);
+  };
+
+  delete = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { id } = req.params as { id: string };
+    await <%= model.name %>Service.delete(id);
+    reply.code(204).send();
+  };
+}
+
+export default new <%= model.name %>Controller();

@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/user.model';
 import { Secret, SignOptions } from 'jsonwebtoken';
-
-const prisma = new PrismaClient();
+import { UnauthorizedError, BadRequestError } from '../middleware/error.middleware';
 
 export class AuthService {
   async register(userData: any) {
@@ -13,7 +12,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new Error('User with this email already exists');
+      throw new BadRequestError('User with this email already exists');
     }
 
     const hashedPassword = await UserModel.hashPassword(userData.password);
@@ -41,13 +40,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const isPasswordValid = await UserModel.comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
+      throw new UnauthorizedError('Invalid email or password');
     }
 
     const jwtSecret = process.env.JWT_SECRET as Secret;
@@ -80,7 +79,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new BadRequestError('User not found');
     }
 
     return {

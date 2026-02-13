@@ -6,23 +6,35 @@ import { Prisma } from "./prisma";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import { Template } from "./template";
-import { Authentification } from "./authentification";
+import { Authentication } from "./authentication";
 
 export class Project {
   constructor(
-    private authService: Authentification,
+    private authenticationService: Authentication,
     private packageService: Package,
     private prismaService: Prisma,
     private templateService: Template,
-    private projectPath: string
+    private projectPath: string,
   ) {}
-  async createProject() {
-    const projectDetails = await inquirer.prompt([
+
+  /**
+   * Main entry point to create a new project.
+   *
+   */
+  public async createProject(): Promise<void> {
+    const responses = await inquirer.prompt([
       {
         type: "input",
         name: "projectName",
         message: "Enter project name",
         default: "node-craft-project",
+      },
+      {
+        type: "list",
+        name: "framework",
+        message: "Select a framework",
+        choices: ["Express", "Fastify"],
+        default: "Express",
       },
       {
         type: "list",
@@ -33,71 +45,110 @@ export class Project {
       },
       {
         type: "confirm",
-        name: "authentification",
-        message: "Do you want to add authentication to your project ?",
+        name: "enableAuthentication",
+        message: "Do you want to add authentication to your project?",
         default: false,
       },
       {
         type: "confirm",
         name: "createModels",
-        message: "Do you want to create models ?",
+        message: "Do you want to create models?",
+        default: true,
+      },
+      {
+        type: "confirm",
+        name: "enableGraphql",
+        message: "Do you want to add GraphQL support?",
+        default: false,
+      },
+      {
+        type: "confirm",
+        name: "enableRest",
+        message: "Do you want to add REST support?",
         default: true,
       },
     ]);
 
-    this.projectPath = path.resolve(process.cwd(), projectDetails.projectName);
+    this.projectPath = path.resolve(process.cwd(), responses.projectName);
 
+    // Initial project setup
     await fs.ensureDir(this.projectPath);
+    this.configureServices(responses);
+    await this.generateProjectStructure(responses);
 
-    this.packageService = new Package(this.projectPath);
-    this.prismaService = new Prisma(this.projectPath, projectDetails.database);
-    this.templateService = new Template(
-      this.projectPath,
-      projectDetails.authentification
-    );
-    this.authService = new Authentification(this.projectPath);
-    await this.generateProjectStructure();
+    let prismaModels: any[] = [];
 
-    let models: any = [];
-    if (projectDetails.createModels) {
+    // Optional model generation
+    if (responses.createModels) {
       try {
-        models = await this.prismaService.generatePrismaModels();
+        prismaModels = await this.prismaService.generatePrismaModels();
       } catch (error) {
         console.error("Error generating Prisma models:", error);
       }
     }
 
-    if (projectDetails.authentification) {
+    // Optional authentication setup
+    if (responses.enableAuthentication) {
       try {
-        const userModel = await this.authService.setupAuthentication();
+        const userModel =
+          await this.authenticationService.setupAuthentication();
         await this.prismaService.addUserModel(userModel);
-        models.push(userModel);
+        prismaModels.push(userModel);
       } catch (error) {
         console.error("Error setting up authentication:", error);
       }
     }
 
-    await this.templateService.setupTemplate();
-    await this.templateService.setModels(models);
+    // Template generation
+    await this.templateService.setModels(prismaModels);
     await this.templateService.codeTemplate();
 
+    // Finalize project setup
     await this.setupProjectDependencies();
     console.log(
-      chalk.green(
-        `✅ Project ${projectDetails.projectName} created successfully!`
-      )
+      chalk.green(`✅ Project ${responses.projectName} created successfully!`),
     );
   }
 
-  async generateProjectStructure() {
+  /**
+   * Configures all internal services with the selected project details.
+   */
+  private configureServices(responses: any): void {
+    this.packageService.setProjectPath(this.projectPath, responses.framework, responses.enableGraphql);
+    this.prismaService.setProjectPath(this.projectPath, responses.database);
+    this.templateService.setProjectPath(
+      this.projectPath,
+      responses.framework,
+      responses.enableAuthentication,
+      responses.enableGraphql,
+      responses.enableRest,
+    );
+    this.authenticationService.setProjectPath(
+      this.projectPath,
+      responses.enableRest,
+      responses.enableGraphql,
+      responses.framework
+    );
+  }
+
+  /**
+   * Generates the basic directory structure and configuration files.
+   */
+  public async generateProjectStructure(responses: any): Promise<void> {
     const directories = [
       "src/models",
-      "src/controllers",
-      "src/routes",
       "src/services",
       "src/utils",
       "prisma",
     ];
+
+    if (responses.enableRest) {
+      directories.push("src/controllers", "src/routes");
+    }
+
+    if (responses.enableGraphql) {
+      directories.push("src/graphql");
+    }
 
     for (const dir of directories) {
       await fs.ensureDir(path.join(this.projectPath, dir));
@@ -105,12 +156,37 @@ export class Project {
 
     await this.packageService.generatePackageJson();
     await this.createGitignore();
-    await this.createEnvFile();
     await this.createNodemonConfig();
     await this.packageService.createTsConfig();
+    await this.generateNodeCraftConfig(responses);
   }
 
-  async createGitignore() {
+  /**
+   * Generates the node-craft.json configuration file.
+   */
+  private async generateNodeCraftConfig(responses: any): Promise<void> {
+    const config = {
+      projectName: responses.projectName,
+      framework: responses.framework,
+      database: responses.database,
+      features: {
+        authentication: responses.enableAuthentication,
+        graphql: responses.enableGraphql,
+        rest: responses.enableRest,
+      },
+      createdAt: new Date().toISOString(),
+      version: "2.0-alpha",
+    };
+
+    await fs.writeJSON(path.join(this.projectPath, "node-craft.json"), config, {
+      spaces: 2,
+    });
+  }
+
+  /**
+   * Creates a default .gitignore file.
+   */
+  private async createGitignore(): Promise<void> {
     const gitignoreContent = `
 node_modules/
 dist/
@@ -121,31 +197,26 @@ dist/
 
     await fs.writeFile(
       path.join(this.projectPath, ".gitignore"),
-      gitignoreContent
+      gitignoreContent.trim(),
     );
   }
 
-  async createEnvFile() {
-    const envPath = path.join(this.projectPath, ".env");
-    if (!(await fs.pathExists(envPath))) {
-      const envContent = `
-  DATABASE_URL="postgresql://username:password@localhost:5432/mydatabase?schema=public"
-  `;
-      await fs.writeFile(path.join(this.projectPath, ".env"), envContent);
-    }
-  }
+  /**
+   * Initializes git and provides installation instructions.
+   */
+  private async setupProjectDependencies(): Promise<void> {
+    execSync(`git init`, { cwd: this.projectPath });
 
-  async setupProjectDependencies() {
-    await fs.ensureDir(this.projectPath);
-    execSync(`cd ${this.projectPath} && git init`);
-
-    console.log(chalk.yellow("To install dependencies, run:"));
+    console.log(chalk.yellow("\nTo install dependencies, run:"));
     console.log(
-      chalk.cyan(`cd ${path.basename(this.projectPath)} && npm install`)
+      chalk.cyan(`  cd ${path.basename(this.projectPath)} && npm install`),
     );
   }
 
-  async createNodemonConfig() {
+  /**
+   * Generates the nodemon.json configuration file.
+   */
+  private async createNodemonConfig(): Promise<void> {
     const nodemonConfig = {
       watch: ["src"],
       ext: "ts",
@@ -156,7 +227,7 @@ dist/
     await fs.writeJSON(
       path.join(this.projectPath, "nodemon.json"),
       nodemonConfig,
-      { spaces: 2 }
+      { spaces: 2 },
     );
   }
 }

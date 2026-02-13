@@ -1,0 +1,61 @@
+import { gql } from '@apollo/server';
+
+export const typeDefs = gql`
+  scalar DateTime
+  scalar JSON
+
+<% models.forEach(model => { %>
+  """
+  <%= model.name %> model representation
+  """
+  type <%= model.name %> {
+    id: ID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    <% model.fields.forEach(field => { %>
+    <%= field.name %>: <%= field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %><%= !field.isOptional ? '!' : '' %>
+    <% }) %>
+  }
+
+  input Create<%= model.name %>Input {
+    <% model.fields.forEach(field => { %>
+    <%= field.name %>: <%= field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %><%= !field.isOptional ? '!' : '' %>
+    <% }) %>
+  }
+
+  input Update<%= model.name %>Input {
+    <% model.fields.forEach(field => { %>
+    <%= field.name %>: <%= field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %>
+    <% }) %>
+  }
+<% }) %>
+
+<% if (isAuth) { %>
+  type AuthResponse {
+    token: String!
+    user: User!
+  }
+<% } %>
+
+  type Query {
+<% models.forEach(model => { %>
+    get<%= model.name %>s: [<%= model.name %>!]!
+    get<%= model.name %>(id: ID!): <%= model.name %>
+<% }) %>
+<% if (isAuth) { %>
+    me: User
+<% } %>
+  }
+
+  type Mutation {
+<% models.forEach(model => { %>
+    create<%= model.name %>(input: Create<%= model.name %>Input!): <%= model.name %>!
+    update<%= model.name %>(id: ID!, input: Update<%= model.name %>Input!): <%= model.name %>!
+    delete<%= model.name %>(id: ID!): Boolean!
+<% }) %>
+<% if (isAuth) { %>
+    register(input: CreateUserInput!): AuthResponse!
+    login(email: String!, password: String!): AuthResponse!
+<% } %>
+  }
+`;

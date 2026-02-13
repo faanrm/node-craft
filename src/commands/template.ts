@@ -4,316 +4,217 @@ import ejs from "ejs";
 import type { ProjectModel } from "../models/project-model";
 import type { ModelField } from "../models/model-field";
 
+const TEMPLATES_DIR = path.join(__dirname, "../templates");
+
 export class Template {
   private projectPath!: string;
+  private framework: 'Express' | 'Fastify' = 'Express';
   private isAuth!: boolean;
-  constructor(projectPath: string, isAuth: boolean = false) {
-    this.projectPath = projectPath;
-    this.isAuth = isAuth;
-  }
+  private isGraphql!: boolean;
+  private isRest!: boolean;
   private models: ProjectModel[] = [];
 
-  async setupTemplate() {
-    const templateDir = path.join(this.projectPath, "templates");
-    await fs.ensureDir(templateDir);
-    const templates = [
-      {
-        name: "swagger.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/swagger.ts"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "config.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/config.ts"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "model-template.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/zod-model-template.ejs"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "logger.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/logger.ts"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "service-template.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/zod-service-template.ejs"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "controller-template.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/zod-controller-template.ejs"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "routes-template.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/routing-template.ejs"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "validator-middleware.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/zod-middleware.ts"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "interface-template.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/interface-template.ejs"),
-          "utf-8"
-        ),
-      },
-      {
-        name: "error-middleware.ts",
-        content: await fs.readFile(
-          path.join(__dirname, "../templates/error.middleware.ts"),
-          "utf-8"
-        ),
-      },
+  constructor(
+    projectPath: string,
+    framework: 'Express' | 'Fastify' = 'Express',
+    isAuth: boolean = false,
+    isGraphql: boolean = false,
+    isRest: boolean = true
+  ) {
+    this.projectPath = projectPath;
+    this.framework = framework;
+    this.isAuth = isAuth;
+    this.isGraphql = isGraphql;
+    this.isRest = isRest;
+  }
+
+  public setProjectPath(
+    projectPath: string,
+    framework?: 'Express' | 'Fastify',
+    isAuth?: boolean,
+    isGraphql?: boolean,
+    isRest?: boolean
+  ): void {
+    this.projectPath = projectPath;
+    if (framework !== undefined) this.framework = framework;
+    if (isAuth !== undefined) this.isAuth = isAuth;
+    if (isGraphql !== undefined) this.isGraphql = isGraphql;
+    if (isRest !== undefined) this.isRest = isRest;
+  }
+
+  public setModels(models: ProjectModel[]): void {
+    this.models = models;
+  }
+
+  /**
+   * Orchestrates the template generation process for the project.
+   */
+  public async codeTemplate(): Promise<void> {
+    await this.ensureDirectories();
+    await this.generateUtilityFiles();
+    await this.generateModelFiles();
+    await this.generateMainFile();
+
+    if (this.isGraphql) {
+      await this.generateGraphqlFiles();
+    }
+  }
+
+  /**
+   * Ensures all base and technology-specific directories exist.
+   */
+  private async ensureDirectories(): Promise<void> {
+    const coreDirs = [
+      "src/middleware",
+      "src/models",
+      "src/services",
+      "src/interfaces",
+      "src/utils",
     ];
-    for (const template of templates) {
-      await fs.writeFile(
-        path.join(templateDir, template.name),
-        template.content
-      );
+
+    const directories = [...coreDirs];
+
+    if (this.isRest) {
+      directories.push("src/controllers", "src/routes");
+    }
+
+    if (this.isGraphql) {
+      directories.push("src/graphql");
+    }
+
+    const creationPromises = directories.map((dir) =>
+      fs.ensureDir(path.join(this.projectPath, dir))
+    );
+
+    await Promise.all(creationPromises);
+  }
+
+  /**
+   * Generates common utility and middleware files.
+   */
+  private async generateUtilityFiles(): Promise<void> {
+    const utilsTemplates = [
+      { target: "src/utils/config.ts", source: "common/config.ts" },
+      { target: "src/utils/logger.ts", source: "common/logger.ts" },
+      { target: "src/utils/prisma.ts", source: "common/prisma-client.ts" },
+    ];
+
+    if (this.framework === 'Express') {
+       utilsTemplates.push(
+         { target: "src/utils/catch-async.ts", source: "express/utils/catch-async.ts" },
+         { target: "src/middleware/validator-middleware.ts", source: "express/middleware/validator.middleware.ts" },
+         { target: "src/middleware/error.middleware.ts", source: "express/middleware/error.middleware.ts" }
+       );
+    }
+    // Add Fastify equivalents here when available
+
+    for (const { target, source } of utilsTemplates) {
+      // Utilities currently don't use model data but we pass standard flags for consistency
+      await this.processTemplate(source, target, {});
     }
   }
 
-  async codeTemplate() {
-    await fs.ensureDir(path.join(this.projectPath, "src/middleware"));
-    await fs.ensureDir(path.join(this.projectPath, "src/models"));
-    await fs.ensureDir(path.join(this.projectPath, "src/services"));
-    await fs.ensureDir(path.join(this.projectPath, "src/controllers"));
-    await fs.ensureDir(path.join(this.projectPath, "src/routes"));
-    await fs.ensureDir(path.join(this.projectPath, "src/interfaces"));
-    await fs.ensureDir(path.join(this.projectPath, "src/utils"));
-
-    await fs.writeFile(
-      path.join(this.projectPath, "src/utils/swagger.ts"),
-      await fs.readFile(
-        path.join(this.projectPath, "templates/swagger.ts"),
-        "utf-8"
-      )
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/middleware/validator-middleware.ts"),
-      await fs.readFile(
-        path.join(this.projectPath, "templates/validator-middleware.ts"),
-        "utf-8"
-      )
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/utils/config.ts"),
-      await fs.readFile(
-        path.join(this.projectPath, "templates/config.ts"),
-        "utf-8"
-      )
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/utils/logger.ts"),
-      await fs.readFile(
-        path.join(this.projectPath, "templates/logger.ts"),
-        "utf-8"
-      )
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/middleware/error.middleware.ts"),
-      await fs.readFile(
-        path.join(this.projectPath, "templates/error-middleware.ts"),
-        "utf-8"
-      )
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/utils/logger.ts"),
-      await fs.readFile(
-        path.join(this.projectPath, "templates/logger.ts"),
-        "utf-8"
-      )
-    );
-
+  /**
+   * Generates files for each defined model.
+   */
+  private async generateModelFiles(): Promise<void> {
     for (const model of this.models) {
-      if (model.name === "User" && this.isAuth) {
-        const interfaceContent = await ejs.render(
-          await fs.readFile(
-            path.join(this.projectPath, "templates/interface-template.ts"),
-            "utf-8"
-          ),
-          { model }
-        );
-        await fs.writeFile(
-          path.join(
-            this.projectPath,
-            `src/interfaces/${model.name.toLowerCase()}.interface.ts`
-          ),
-          interfaceContent
-        );
+      const name = model.name.toLowerCase();
+      const modelTemplates = [
+        { target: `src/interfaces/${name}.interface.ts`, source: "common/interface.ejs" },
+        { target: `src/services/${name}.service.ts`, source: "common/service.ejs" },
+      ];
 
-        const serviceContent = await ejs.render(
-          await fs.readFile(
-            path.join(this.projectPath, "templates/service-template.ts"),
-            "utf-8"
-          ),
-          { model }
-        );
-        await fs.writeFile(
-          path.join(
-            this.projectPath,
-            `src/services/${model.name.toLowerCase()}.service.ts`
-          ),
-          serviceContent
-        );
-
-        const controllerContent = await ejs.render(
-          await fs.readFile(
-            path.join(this.projectPath, "templates/controller-template.ts"),
-            "utf-8"
-          ),
-          { model }
-        );
-        await fs.writeFile(
-          path.join(
-            this.projectPath,
-            `src/controllers/${model.name.toLowerCase()}.controller.ts`
-          ),
-          controllerContent
-        );
-
-        const routeContent = await ejs.render(
-          await fs.readFile(
-            path.join(this.projectPath, "templates/routes-template.ts"),
-            "utf-8"
-          ),
-          { model }
-        );
-        await fs.writeFile(
-          path.join(
-            this.projectPath,
-            `src/routes/${model.name.toLowerCase()}.routes.ts`
-          ),
-          routeContent
-        );
-        continue;
-      }
-
-      const modelContent = await ejs.render(
-        await fs.readFile(
-          path.join(this.projectPath, "templates/model-template.ts"),
-          "utf-8"
-        ),
-        {
-          model,
-          getZodValidator: this.getZodValidator,
+      if (this.isRest) {
+        if (this.framework === 'Express') {
+          modelTemplates.push(
+            { target: `src/controllers/${name}.controller.ts`, source: "express/controller.ejs" },
+            { target: `src/routes/${name}.routes.ts`, source: "express/routes.ejs" }
+          );
+        } else if (this.framework === 'Fastify') {
+          modelTemplates.push(
+            { target: `src/controllers/${name}.controller.ts`, source: "fastify/controller.ejs" },
+            { target: `src/routes/${name}.routes.ts`, source: "fastify/routes.ejs" }
+          );
         }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/models/${model.name.toLowerCase()}.model.ts`
-        ),
-        modelContent
-      );
-      const interfaceContent = await ejs.render(
-        await fs.readFile(
-          path.join(this.projectPath, "templates/interface-template.ts"),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/interfaces/${model.name.toLowerCase()}.interface.ts`
-        ),
-        interfaceContent
-      );
-
-      const serviceContent = await ejs.render(
-        await fs.readFile(
-          path.join(this.projectPath, "templates/service-template.ts"),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/services/${model.name.toLowerCase()}.service.ts`
-        ),
-        serviceContent
-      );
-
-      const controllerContent = await ejs.render(
-        await fs.readFile(
-          path.join(this.projectPath, "templates/controller-template.ts"),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/controllers/${model.name.toLowerCase()}.controller.ts`
-        ),
-        controllerContent
-      );
-
-      const routeContent = await ejs.render(
-        await fs.readFile(
-          path.join(this.projectPath, "templates/routes-template.ts"),
-          "utf-8"
-        ),
-        { model }
-      );
-      await fs.writeFile(
-        path.join(
-          this.projectPath,
-          `src/routes/${model.name.toLowerCase()}.routes.ts`
-        ),
-        routeContent
-      );
-    }
-
-    const mainContent = await ejs.render(
-      await fs.readFile(
-        path.join(__dirname, "../templates/main-template.ejs"),
-        "utf-8"
-      ),
-      {
-        models: this.models,
-        projectName: path.basename(this.projectPath),
-        isAuth: this.isAuth,
       }
-    );
-    await fs.writeFile(
-      path.join(this.projectPath, "src/index.ts"),
-      mainContent
-    );
-    await fs.remove(path.join(this.projectPath, "templates"));
+
+      // Skip User model if authentication is enabled, as it's handled by Authentication service
+      if (!(model.name === "User" && this.isAuth)) {
+        modelTemplates.push({
+          target: `src/models/${name}.model.ts`,
+          source: "common/model.ejs",
+        });
+      }
+
+      for (const { target, source } of modelTemplates) {
+        await this.processTemplate(source, target, {
+          model,
+          getZodValidator: this.getZodValidator.bind(this),
+        });
+      }
+    }
   }
 
-  async getZodValidator(field: ModelField) {
+  /**
+   * Generates the main entry point file (src/index.ts).
+   */
+  private async generateMainFile(): Promise<void> {
+    const templateName = this.framework === 'Fastify' ? 'fastify/main.ejs' : 'express/main.ejs';
+    await this.processTemplate(templateName, "src/index.ts", {
+      models: this.models,
+      projectName: path.basename(this.projectPath),
+    });
+  }
+
+  /**
+   * Generates GraphQL-specific schema and resolver files.
+   */
+  private async generateGraphqlFiles(): Promise<void> {
+    const graphqlDir = path.join(this.projectPath, "src/graphql");
+    await fs.ensureDir(graphqlDir);
+
+    await this.processTemplate("common/graphql-schema.ejs", "src/graphql/schema.ts", {
+      models: this.models,
+    });
+
+    await this.processTemplate("common/graphql-resolvers.ejs", "src/graphql/resolvers.ts", {
+      models: this.models,
+    });
+  }
+
+  /**
+   * Helper to render an EJS template and write it to a destination path.
+   * Automatically injects common flags (isAuth, isRest, isGraphql).
+   */
+  private async processTemplate(
+    sourceName: string,
+    targetPath: string,
+    data: object
+  ): Promise<void> {
+    const templateFullPath = path.join(TEMPLATES_DIR, sourceName);
+    const destinationPath = path.join(this.projectPath, targetPath);
+
+    const templateContent = await fs.readFile(templateFullPath, "utf-8");
+    const renderedContent = await ejs.render(templateContent, {
+      ...data,
+      framework: this.framework,
+      isAuth: this.isAuth,
+      isRest: this.isRest,
+      isGraphql: this.isGraphql,
+    });
+
+    await fs.writeFile(destinationPath, renderedContent);
+  }
+
+  /**
+   * Maps Prisma types to Zod validators for schema generation.
+   */
+  private async getZodValidator(field: ModelField): Promise<string> {
     let validator = "z";
     switch (field.type) {
       case "String":
         validator += ".string()";
-
         if (field.minLength !== undefined) {
           validator += `.min(${field.minLength}, { message: "Must be at least ${field.minLength} characters" })`;
         }
@@ -326,7 +227,6 @@ export class Template {
         break;
       case "Int":
         validator += ".number().int()";
-
         if (field.min !== undefined) {
           validator += `.min(${field.min}, { message: "Must be at least ${field.min}" })`;
         }
@@ -336,7 +236,6 @@ export class Template {
         break;
       case "Float":
         validator += ".number()";
-
         if (field.min !== undefined) {
           validator += `.min(${field.min}, { message: "Must be at least ${field.min}" })`;
         }
@@ -358,11 +257,7 @@ export class Template {
           const enumValues = Object.values(field.enumValues);
           validator += `.enum([${enumValues
             .map((v) => `"${v}"`)
-            .join(
-              ", "
-            )}], { message: "Must be one of the following values: ${enumValues.join(
-            ", "
-          )}" })`;
+            .join(", ")}], { message: "Must be one of: ${enumValues.join(", ")}" })`;
         } else if (field.isRelation) {
           validator += ".object({})";
         } else {
@@ -375,9 +270,5 @@ export class Template {
     }
 
     return validator;
-  }
-
-  setModels(models: ProjectModel[]) {
-    this.models = models;
   }
 }

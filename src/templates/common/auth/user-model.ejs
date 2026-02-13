@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 
 export class UserModel {
-  private prisma: PrismaClient;
+  private prisma = prisma;
   
   static schema = z.object({
     email: z.string().email({ message: "Invalid email format" }),
@@ -16,10 +16,6 @@ export class UserModel {
     email: z.string().email({ message: "Invalid email format" }),
     password: z.string().min(1, { message: "Password is required" })
   });
-
-  constructor() {
-    this.prisma = new PrismaClient();
-  }
 
   static validate(data: unknown) {
     const validated = this.schema.parse(data);
