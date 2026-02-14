@@ -131,7 +131,7 @@ export class Authentication {
     const destinationPath = path.join(this.projectPath, targetPath);
 
     const templateContent = await fs.readFile(templateFullPath, "utf-8");
-    const renderedContent = await ejs.render(templateContent, data);
+    const renderedContent = await ejs.render(templateContent, data, { async: true });
     
     await fs.writeFile(destinationPath, renderedContent);
   }

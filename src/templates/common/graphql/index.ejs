@@ -1,0 +1,40 @@
+import { mergeTypeDefs, mergeResolvers } from '@graphql-tools/merge';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+
+// Core
+import { commonTypeDefs } from './common/common.typeDefs';
+import { commonResolvers } from './common/common.resolvers';
+
+// Domains
+<% models.forEach(model => { %>
+import { <%= model.name.toLowerCase() %>TypeDefs } from './<%= model.name.toLowerCase() %>/<%= model.name.toLowerCase() %>.typeDefs';
+import { <%= model.name.toLowerCase() %>Resolvers } from './<%= model.name.toLowerCase() %>/<%= model.name.toLowerCase() %>.resolvers';
+<% }) %>
+
+<% if (isAuth) { %>
+import { authTypeDefs } from './auth/auth.typeDefs';
+import { authResolvers } from './auth/auth.resolvers';
+<% } %>
+
+const typeDefs = mergeTypeDefs([
+  commonTypeDefs,
+  <% if (isAuth) { %>authTypeDefs,<% } %>
+  <% models.forEach(model => { %>
+  <%= model.name.toLowerCase() %>TypeDefs,
+  <% }) %>
+]);
+
+const resolvers = mergeResolvers([
+  commonResolvers,
+  <% if (isAuth) { %>authResolvers,<% } %>
+  <% models.forEach(model => { %>
+  <%= model.name.toLowerCase() %>Resolvers,
+  <% }) %>
+]);
+
+export const schema = makeExecutableSchema({
+  typeDefs,
+  resolvers,
+});
+
+export { typeDefs, resolvers };

@@ -150,6 +150,10 @@ export class Project {
       directories.push("src/graphql");
     }
 
+    if (responses.framework === "Fastify") {
+      directories.push("src/plugins");
+    }
+
     for (const dir of directories) {
       await fs.ensureDir(path.join(this.projectPath, dir));
     }

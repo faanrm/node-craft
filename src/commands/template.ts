@@ -55,6 +55,10 @@ export class Template {
     await this.generateModelFiles();
     await this.generateMainFile();
 
+    if (this.framework === 'Fastify') {
+      await this.generateFastifyPlugins();
+    }
+
     if (this.isGraphql) {
       await this.generateGraphqlFiles();
     }
@@ -171,16 +175,40 @@ export class Template {
    * Generates GraphQL-specific schema and resolver files.
    */
   private async generateGraphqlFiles(): Promise<void> {
-    const graphqlDir = path.join(this.projectPath, "src/graphql");
-    await fs.ensureDir(graphqlDir);
+    const graphqlDir = "src/graphql";
+    await fs.ensureDir(path.join(this.projectPath, graphqlDir));
 
-    await this.processTemplate("common/graphql-schema.ejs", "src/graphql/schema.ts", {
+    // 1. Common
+    await fs.ensureDir(path.join(this.projectPath, graphqlDir, "common"));
+    await this.processTemplate("common/graphql/common.typeDefs.ejs", `${graphqlDir}/common/common.typeDefs.ts`, {});
+    await this.processTemplate("common/graphql/common.resolvers.ejs", `${graphqlDir}/common/common.resolvers.ts`, {});
+
+    // 2. Domains
+    for (const model of this.models) {
+      const domainDir = `${graphqlDir}/${model.name.toLowerCase()}`;
+      await fs.ensureDir(path.join(this.projectPath, domainDir));
+      await this.processTemplate("common/graphql/domain.typeDefs.ejs", `${domainDir}/${model.name.toLowerCase()}.typeDefs.ts`, { model });
+      await this.processTemplate("common/graphql/domain.resolvers.ejs", `${domainDir}/${model.name.toLowerCase()}.resolvers.ts`, { model });
+    }
+
+    // 3. Auth
+    if (this.isAuth) {
+      await fs.ensureDir(path.join(this.projectPath, graphqlDir, "auth"));
+      await this.processTemplate("common/graphql/auth.typeDefs.ejs", `${graphqlDir}/auth/auth.typeDefs.ts`, {});
+      await this.processTemplate("common/graphql/auth.resolvers.ejs", `${graphqlDir}/auth/auth.resolvers.ts`, {});
+    }
+
+    // 4. Index (Merging)
+    await this.processTemplate("common/graphql/index.ejs", `${graphqlDir}/index.ts`, {
       models: this.models,
     });
+  }
 
-    await this.processTemplate("common/graphql-resolvers.ejs", "src/graphql/resolvers.ts", {
-      models: this.models,
-    });
+  /**
+   * Generates Fastify-specific plugins.
+   */
+  private async generateFastifyPlugins(): Promise<void> {
+    await this.processTemplate("fastify/plugins/prisma.ejs", "src/plugins/prisma.ts", {});
   }
 
   /**
@@ -202,7 +230,7 @@ export class Template {
       isAuth: this.isAuth,
       isRest: this.isRest,
       isGraphql: this.isGraphql,
-    });
+    }, { async: true });
 
     await fs.writeFile(destinationPath, renderedContent);
   }

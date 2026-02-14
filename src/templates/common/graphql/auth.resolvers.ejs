@@ -1,0 +1,30 @@
+import authService from '../../services/auth.service';
+
+export const authResolvers = {
+  Query: {
+    me: async (_: any, __: any, context: any) => {
+      if (!context.user) return null;
+      try {
+        return await authService.getUserById(context.user.id);
+      } catch (error) {
+        return null;
+      }
+    },
+  },
+  Mutation: {
+    register: async (_: any, { input }: { input: any }) => {
+      try {
+        return await authService.register(input);
+      } catch (error: any) {
+        throw new Error(`Registration failed: ${error.message}`);
+      }
+    },
+    login: async (_: any, { email, password }: any) => {
+      try {
+        return await authService.login(email, password);
+      } catch (error: any) {
+        throw new Error(`Login failed: ${error.message}`);
+      }
+    },
+  },
+};

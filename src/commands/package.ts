@@ -62,6 +62,7 @@ export class Package {
         fastify: "^4.24.3",
         "@fastify/cors": "^8.4.1",
         "@fastify/helmet": "^11.1.1",
+        "fastify-plugin": "^4.5.1",
       };
     }
 
@@ -71,12 +72,16 @@ export class Package {
           ...packageJson.dependencies,
           "@apollo/server": "^4.7.1",
           graphql: "^16.6.0",
+          "@graphql-tools/schema": "^10.0.0",
+          "@graphql-tools/merge": "^9.0.0",
         };
       } else if (this.framework === "Fastify") {
         packageJson.dependencies = {
           ...packageJson.dependencies,
           "@apollo/server": "^4.7.1",
           graphql: "^16.6.0",
+          "@graphql-tools/schema": "^10.0.0",
+          "@graphql-tools/merge": "^9.0.0",
           "@as-integrations/fastify": "^2.1.1",
         };
       }

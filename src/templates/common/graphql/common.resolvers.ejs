@@ -1,0 +1,28 @@
+import { GraphQLScalarType, Kind } from 'graphql';
+
+const JSONScalar = new GraphQLScalarType({
+  name: 'JSON',
+  description: 'Custom JSON scalar type',
+  parseValue(value) { return value; },
+  serialize(value) { return value; },
+  parseLiteral(ast) {
+    if (ast.kind === Kind.OBJECT) {
+      const value = Object.create(null);
+      ast.fields.forEach(field => {
+        value[field.name.value] = field.value.kind === 'ObjectValue' ? JSON.parse(JSON.stringify(field.value)) : (field.value as any).value;
+      });
+      return value;
+    }
+    return null;
+  }
+});
+
+export const commonResolvers = {
+  JSON: JSONScalar,
+  Query: {
+    _empty: () => 'Node Craft API'
+  },
+  Mutation: {
+    _empty: () => 'Node Craft API'
+  }
+};

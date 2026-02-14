@@ -1,32 +1,7 @@
-import { GraphQLScalarType, Kind } from 'graphql';
-<% models.forEach(model => { %>
-import <%= model.name.toLowerCase() %>Service from '../services/<%= model.name.toLowerCase() %>.service';
-<% }) %>
-<% if (isAuth) { %>
-import authService from '../services/auth.service';
-<% } %>
+import <%= model.name.toLowerCase() %>Service from '../../services/<%= model.name.toLowerCase() %>.service';
 
-const JSONScalar = new GraphQLScalarType({
-  name: 'JSON',
-  description: 'Custom JSON scalar type',
-  parseValue(value) { return value; },
-  serialize(value) { return value; },
-  parseLiteral(ast) {
-    if (ast.kind === Kind.OBJECT) {
-      const value = Object.create(null);
-      ast.fields.forEach(field => {
-        value[field.name.value] = field.value.kind === 'ObjectValue' ? JSON.parse(JSON.stringify(field.value)) : (field.value as any).value;
-      });
-      return value;
-    }
-    return null;
-  }
-});
-
-export const resolvers = {
-  JSON: JSONScalar,
+export const <%= model.name.toLowerCase() %>Resolvers = {
   Query: {
-<% models.forEach(model => { %>
     get<%= model.name %>s: async (_: any, __: any, context: any) => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
@@ -43,10 +18,8 @@ export const resolvers = {
         throw new Error(`Failed to fetch <%= model.name %>: ${error.message}`);
       }
     },
-<% }) %>
   },
   Mutation: {
-<% models.forEach(model => { %>
     create<%= model.name %>: async (_: any, { input }: { input: any }, context: any) => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
@@ -72,22 +45,5 @@ export const resolvers = {
         throw new Error(`Failed to delete <%= model.name %>: ${error.message}`);
       }
     },
-<% }) %>
-<% if (isAuth) { %>
-    register: async (_: any, { input }: { input: any }) => {
-      try {
-        return await authService.register(input);
-      } catch (error: any) {
-        throw new Error(`Registration failed: ${error.message}`);
-      }
-    },
-    login: async (_: any, { email, password }: any) => {
-      try {
-        return await authService.login(email, password);
-      } catch (error: any) {
-        throw new Error(`Login failed: ${error.message}`);
-      }
-    },
-<% } %>
   },
 };

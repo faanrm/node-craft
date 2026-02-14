@@ -1,0 +1,17 @@
+import { gql } from '@apollo/server';
+
+export const authTypeDefs = gql`
+  type AuthResponse {
+    token: String!
+    user: User!
+  }
+
+  extend type Query {
+    me: User
+  }
+
+  extend type Mutation {
+    register(input: CreateUserInput!): AuthResponse!
+    login(email: String!, password: String!): AuthResponse!
+  }
+`;

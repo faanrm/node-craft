@@ -18,16 +18,18 @@ const start = async () => {
   await app.register(cors, { origin: config.server.cors.origin });
   await app.register(helmet);
 
-  // 2. GraphQL Setup
+  // 2. Core Plugins
+  const { default: prismaPlugin } = await import('./plugins/prisma');
+  await app.register(prismaPlugin);
+
+  // 3. GraphQL Setup
   <% if (isGraphql) { %>
   const { ApolloServer } = await import('@apollo/server');
   const { default: fastifyApollo, fastifyApolloDrainPlugin } = await import('@as-integrations/fastify');
-  const { typeDefs } = await import('./graphql/schema');
-  const { resolvers } = await import('./graphql/resolvers');
+  const { schema } = await import('./graphql');
 
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
     plugins: [fastifyApolloDrainPlugin(app)],
   });
 
