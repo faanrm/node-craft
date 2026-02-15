@@ -10,7 +10,8 @@
     "start": "nodemon",
     "build": "tsc --build --force && tsc --build --force && copyfiles --up 1 \"src/**/*.{ejs,html,json,yaml,jpg,png,ts}\" dist/src",
     "generate": "prisma generate",
-    "migrate": "prisma db push"
+    "migrate": "prisma db push",
+    "test": "vitest run"
   },
   "dependencies": {
     "chalk": "^5.4.1",

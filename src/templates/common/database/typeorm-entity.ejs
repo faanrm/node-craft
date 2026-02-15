@@ -1,0 +1,44 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, OneToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
+
+@Entity()
+export class <%= model.name %> {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+<% model.fields.forEach(field => { %>
+  <% if (field.isRelation) { %>
+    <% if (field.relationType === 'OneToMany') { %>
+  @OneToMany(() => <%= field.relationModel %>, (target) => target.<%= model.name.toLowerCase() %>)
+  <%= field.name %>!: <%= field.relationModel %>[];
+    <% } else if (field.relationType === 'OneToOne') { %>
+  @OneToOne(() => <%= field.relationModel %>)
+  @JoinColumn()
+  <%= field.name %>!: <%= field.relationModel %>;
+    <% } %>
+  <% } else { %>
+  @Column({
+    type: <%= 
+      field.type === 'String' ? "'varchar'" : 
+      field.type === 'Int' ? "'int'" : 
+      field.type === 'Float' ? "'float'" : 
+      field.type === 'Boolean' ? "'boolean'" : 
+      field.type === 'DateTime' ? "'timestamp'" : "'json'" 
+    %>,
+    nullable: <%= field.isOptional %>,
+    unique: <%= !!field.isUnique %>,
+  })
+  <%= field.name %>!: <%= 
+    field.type === 'String' ? 'string' : 
+    field.type === 'Int' || field.type === 'Float' ? 'number' : 
+    field.type === 'Boolean' ? 'boolean' : 
+    field.type === 'DateTime' ? 'Date' : 'any' 
+  %>;
+  <% } %>
+<% }) %>
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}

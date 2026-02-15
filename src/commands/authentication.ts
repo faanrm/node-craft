@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import ejs from "ejs";
 import type { ProjectModel } from "../models/project-model";
+import { DatabaseService } from "../models/database-service.interface";
 
 const TEMPLATES_DIR = path.join(__dirname, "../templates");
 
@@ -30,7 +31,25 @@ const DEFAULT_USER_MODEL: ProjectModel = {
     { name: "email", type: "String", isOptional: false, isUnique: true },
     { name: "password", type: "String", isOptional: false, isUnique: false },
     { name: "name", type: "String", isOptional: true, isUnique: false },
-    { name: "role", type: "String", isOptional: false, isUnique: false },
+    { 
+      name: "role", 
+      type: "Role", 
+      isOptional: false, 
+      isUnique: false, 
+      isRelation: true, 
+      relationType: "OneToOne", 
+      relationModel: "Role" 
+    },
+  ],
+};
+
+/**
+ * Default Role model representation.
+ */
+const DEFAULT_ROLE_MODEL: ProjectModel = {
+  name: "Role",
+  fields: [
+    { name: "name", type: "String", isOptional: false, isUnique: true },
   ],
 };
 
@@ -38,36 +57,42 @@ export class Authentication {
   private isRest: boolean = true;
   private isGraphql: boolean = false;
   private framework: 'Express' | 'Fastify' = 'Express';
+  private databaseService!: DatabaseService;
 
   constructor(private projectPath: string) {}
 
-  /**
-   * Configures the project path and technology stack for the authentication service.
-   */
   public setProjectPath(
     projectPath: string,
+    databaseService: DatabaseService,
     isRest: boolean = true,
     isGraphql: boolean = false,
     framework: 'Express' | 'Fastify' = 'Express'
   ): void {
     this.projectPath = projectPath;
+    this.databaseService = databaseService;
     this.isRest = isRest;
     this.isGraphql = isGraphql;
     this.framework = framework;
   }
 
+
   /**
    * Orchestrates the setup of authentication in the target project.
    */
-  public async setupAuthentication(): Promise<ProjectModel> {
+  public async setupAuthentication(databaseService: DatabaseService): Promise<ProjectModel[]> {
     try {
+      this.databaseService = databaseService;
       await this.ensureDirectoryStructure();
       await this.generateAuthFiles(DEFAULT_USER_MODEL);
       await this.addDependenciesToPackageJson();
       await this.configureEnvironmentVariables();
 
+      // Add models to database service
+      await databaseService.addModel(DEFAULT_USER_MODEL);
+      await databaseService.addModel(DEFAULT_ROLE_MODEL);
+
       console.log("Authentication setup completed successfully");
-      return DEFAULT_USER_MODEL;
+      return [DEFAULT_USER_MODEL, DEFAULT_ROLE_MODEL];
     } catch (error) {
       console.error("Error setting up authentication:", error);
       throw error;
@@ -97,8 +122,10 @@ export class Authentication {
   private async generateAuthFiles(model: ProjectModel): Promise<void> {
     const templates = [
       { target: "src/models/user.model.ts", source: "common/auth/user-model.ejs" },
+      { target: "src/models/role.model.ts", source: "common/auth/role-model.ejs" },
       { target: "src/services/auth.service.ts", source: "common/auth/auth-service.ejs" },
     ];
+
 
     if (this.framework === 'Express') {
         templates.push(
@@ -115,9 +142,13 @@ export class Authentication {
     // Add Fastify auth templates here
 
     for (const { target, source } of templates) {
-      await this.processTemplate(source, target, { model });
+      await this.processTemplate(source, target, { 
+        model, 
+        orm: this.databaseService?.getOrmName() || 'Prisma' 
+      });
     }
   }
+
 
   /**
    * Helper to render an EJS template and write it to a destination path.
@@ -125,16 +156,20 @@ export class Authentication {
   private async processTemplate(
     sourceName: string,
     targetPath: string,
-    data: object
+    data: any
   ): Promise<void> {
     const templateFullPath = path.join(TEMPLATES_DIR, sourceName);
     const destinationPath = path.join(this.projectPath, targetPath);
 
     const templateContent = await fs.readFile(templateFullPath, "utf-8");
-    const renderedContent = await ejs.render(templateContent, data, { async: true });
+    const renderedContent = await ejs.render(templateContent, {
+      ...data,
+      orm: data.orm || 'Prisma' // Default or passed if known
+    }, { async: true });
     
     await fs.writeFile(destinationPath, renderedContent);
   }
+
 
   /**
    * Adds authentication dependencies to the target project's package.json.

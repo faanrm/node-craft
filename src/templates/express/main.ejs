@@ -14,17 +14,7 @@ import { schema } from './graphql';
 <% } %>
 
 <% if (isRest) { %>
-<% if (isAuth) { %>
-import authRouter from './routes/auth.routes';
-import userRouter from './routes/user.routes';
-<% } %>
-<% for (const model of models) { %>
-<% if (model.name === "User" && !isAuth) { %>
-import userRouter from './routes/user.routes';
-<% } else if (model.name !== "User") { %>
-import <%= model.name.toLowerCase() %>Router from './routes/<%= model.name.toLowerCase() %>.routes';
-<% } %>
-<% } %>
+import apiRouter from './routes';
 <% } %>
 
 dotenv.config();
@@ -63,20 +53,7 @@ const bootstrap = async () => {
   <% } %>
 
   <% if (isRest) { %>
-  <% if (isAuth) { %>
-  app.use('/api/auth', authRouter);
-  app.use('/api/users', userRouter);
-  <% } else { %>
-  <% if (models.some(m => m.name === "User")) { %>
-  app.use('/api/users', userRouter);
-  <% } %>
-  <% } %>
-
-  <% for (const model of models) { %>
-  <% if (model.name !== "User") { %>
-  app.use('/api/<%= model.name.toLowerCase() %>s', <%= model.name.toLowerCase() %>Router);
-  <% } %>
-  <% } %>
+  app.use('/api', apiRouter);
   logger.info('REST support enabled at /api');
   <% } %>
 };

@@ -1,0 +1,42 @@
+import { Table, Column, Model, DataType, HasMany, BelongsTo, ManyToMany, ForeignKey } from 'sequelize-typescript';
+import { I<%= model.name %> } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
+
+@Table({
+  tableName: '<%= model.name.toLowerCase() %>s',
+  timestamps: true,
+})
+export class <%= model.name %> extends Model<I<%= model.name %>> {
+<% model.fields.forEach(field => { %>
+  <% if (field.isRelation) { %>
+    <% if (field.relationType === 'OneToMany') { %>
+  @HasMany(() => <%= field.relationModel %>)
+  <%= field.name %>!: <%= field.relationModel %>[];
+    <% } else if (field.relationType === 'OneToOne') { %>
+  @ForeignKey(() => <%= field.relationModel %>)
+  @Column(DataType.STRING)
+  <%= field.name %>Id!: string;
+
+  @BelongsTo(() => <%= field.relationModel %>)
+  <%= field.name %>!: <%= field.relationModel %>;
+    <% } %>
+  <% } else { %>
+  @Column({
+    type: <%= 
+      field.type === 'String' ? 'DataType.STRING' : 
+      field.type === 'Int' ? 'DataType.INTEGER' : 
+      field.type === 'Float' ? 'DataType.FLOAT' : 
+      field.type === 'Boolean' ? 'DataType.BOOLEAN' : 
+      field.type === 'DateTime' ? 'DataType.DATE' : 'DataType.JSON' 
+    %>,
+    allowNull: <%= field.isOptional %>,
+    unique: <%= !!field.isUnique %>,
+  })
+  <%= field.name %>!: <%= 
+    field.type === 'String' ? 'string' : 
+    field.type === 'Int' || field.type === 'Float' ? 'number' : 
+    field.type === 'Boolean' ? 'boolean' : 
+    field.type === 'DateTime' ? 'Date' : 'any' 
+  %>;
+  <% } %>
+<% }) %>
+}

@@ -40,13 +40,9 @@ const start = async () => {
   logger.info('GraphQL support enabled');
   <% } %>
 
-  // 3. REST Routes
+  // 4. REST Routes
   <% if (isRest) { %>
-  <% for (const model of models) { %>
-  <% if (model.name !== "User") { %>
-  await app.register(import('./routes/<%= model.name.toLowerCase() %>.routes'), { prefix: '/api/<%= model.name.toLowerCase() %>s' });
-  <% } %>
-  <% } %>
+  await app.register(import('./routes'), { prefix: '/api' });
   logger.info('REST support enabled');
   <% } %>
 

@@ -1,0 +1,16 @@
+import { Router } from 'express';
+<% for (const model of models) { %>
+<% if (model.name !== "User") { %>
+import <%= model.name.toLowerCase() %>Routes from './<%= model.name.toLowerCase() %>.routes';
+<% } %>
+<% } %>
+
+const router = Router();
+
+<% for (const model of models) { %>
+<% if (model.name !== "User") { %>
+router.use('/<%= model.name.toLowerCase() %>s', <%= model.name.toLowerCase() %>Routes);
+<% } %>
+<% } %>
+
+export default router;

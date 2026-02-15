@@ -7,12 +7,17 @@ import { execSync } from "child_process";
 import chalk from "chalk";
 import { Template } from "./template";
 import { Authentication } from "./authentication";
+import { Mongoose } from "./mongoose";
+import { TypeORM } from "./typeorm";
+import { SequelizeService } from "./sequelize";
+
+import { DatabaseService } from "../models/database-service.interface";
 
 export class Project {
   constructor(
     private authenticationService: Authentication,
     private packageService: Package,
-    private prismaService: Prisma,
+    private databaseService: DatabaseService,
     private templateService: Template,
     private projectPath: string,
   ) {}
@@ -44,6 +49,14 @@ export class Project {
         default: "PostgreSQL",
       },
       {
+        type: "list",
+        name: "orm",
+        message: "Select an ORM/ODM",
+        choices: ["Prisma", "Mongoose", "TypeORM", "Sequelize"],
+        default: "Prisma",
+        when: (answers: any) => answers.database === "MongoDB" || answers.database === "PostgreSQL" || answers.database === "MySQL",
+      },
+      {
         type: "confirm",
         name: "enableAuthentication",
         message: "Do you want to add authentication to your project?",
@@ -73,35 +86,52 @@ export class Project {
 
     // Initial project setup
     await fs.ensureDir(this.projectPath);
+    
+    // Switch database service based on user choice
+    if (responses.orm === "Mongoose") {
+      this.databaseService = new Mongoose(this.projectPath);
+    } else if (responses.orm === "TypeORM") {
+      this.databaseService = new TypeORM(this.projectPath);
+    } else if (responses.orm === "Sequelize") {
+      this.databaseService = new SequelizeService(this.projectPath);
+    }
+
+    
     this.configureServices(responses);
     await this.generateProjectStructure(responses);
 
-    let prismaModels: any[] = [];
+
+    let models: any[] = [];
 
     // Optional model generation
     if (responses.createModels) {
       try {
-        prismaModels = await this.prismaService.generatePrismaModels();
+        models = await this.databaseService.generateModels();
       } catch (error) {
-        console.error("Error generating Prisma models:", error);
+        console.error("Error generating models:", error);
       }
     }
 
     // Optional authentication setup
     if (responses.enableAuthentication) {
       try {
-        const userModel =
-          await this.authenticationService.setupAuthentication();
-        await this.prismaService.addUserModel(userModel);
-        prismaModels.push(userModel);
+        const authModels =
+          await this.authenticationService.setupAuthentication(this.databaseService);
+        models.push(...authModels);
       } catch (error) {
         console.error("Error setting up authentication:", error);
       }
     }
 
     // Template generation
-    await this.templateService.setModels(prismaModels);
+    await this.templateService.setModels(models);
     await this.templateService.codeTemplate();
+
+    // Ensure schema is fully generated (including auth models) before finishing
+    await this.databaseService.generateSchema();
+
+    // Generate config with models included
+    await this.generateNodeCraftConfig(responses, models);
 
     // Finalize project setup
     await this.setupProjectDependencies();
@@ -115,16 +145,24 @@ export class Project {
    */
   private configureServices(responses: any): void {
     this.packageService.setProjectPath(this.projectPath, responses.framework, responses.enableGraphql);
-    this.prismaService.setProjectPath(this.projectPath, responses.database);
+    this.packageService.setDatabaseDependencies(
+      this.databaseService.getDependencies(),
+      this.databaseService.getDevDependencies()
+    );
+    this.databaseService.setProjectPath(this.projectPath, responses.database);
     this.templateService.setProjectPath(
       this.projectPath,
+      this.databaseService,
       responses.framework,
       responses.enableAuthentication,
       responses.enableGraphql,
       responses.enableRest,
     );
+
+
     this.authenticationService.setProjectPath(
       this.projectPath,
+      this.databaseService,
       responses.enableRest,
       responses.enableGraphql,
       responses.framework
@@ -139,8 +177,12 @@ export class Project {
       "src/models",
       "src/services",
       "src/utils",
-      "prisma",
     ];
+
+    if (responses.orm === "Prisma") {
+      directories.push("prisma");
+    }
+
 
     if (responses.enableRest) {
       directories.push("src/controllers", "src/routes");
@@ -162,22 +204,26 @@ export class Project {
     await this.createGitignore();
     await this.createNodemonConfig();
     await this.packageService.createTsConfig();
-    await this.generateNodeCraftConfig(responses);
   }
 
   /**
    * Generates the node-craft.json configuration file.
    */
-  private async generateNodeCraftConfig(responses: any): Promise<void> {
+  private async generateNodeCraftConfig(responses: any, models: any[]): Promise<void> {
     const config = {
       projectName: responses.projectName,
       framework: responses.framework,
       database: responses.database,
+      orm: responses.orm,
       features: {
         authentication: responses.enableAuthentication,
         graphql: responses.enableGraphql,
         rest: responses.enableRest,
       },
+      models: models.map(m => ({
+        name: m.name,
+        fields: m.fields
+      })),
       createdAt: new Date().toISOString(),
       version: "2.0-alpha",
     };

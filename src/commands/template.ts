@@ -6,6 +6,8 @@ import type { ModelField } from "../models/model-field";
 
 const TEMPLATES_DIR = path.join(__dirname, "../templates");
 
+import { DatabaseService } from "../models/database-service.interface";
+
 export class Template {
   private projectPath!: string;
   private framework: 'Express' | 'Fastify' = 'Express';
@@ -13,34 +15,41 @@ export class Template {
   private isGraphql!: boolean;
   private isRest!: boolean;
   private models: ProjectModel[] = [];
+  private databaseService!: DatabaseService;
 
   constructor(
     projectPath: string,
+    databaseService: DatabaseService,
     framework: 'Express' | 'Fastify' = 'Express',
     isAuth: boolean = false,
     isGraphql: boolean = false,
     isRest: boolean = true
   ) {
     this.projectPath = projectPath;
+    this.databaseService = databaseService;
     this.framework = framework;
     this.isAuth = isAuth;
     this.isGraphql = isGraphql;
     this.isRest = isRest;
   }
 
+
   public setProjectPath(
     projectPath: string,
+    databaseService: DatabaseService,
     framework?: 'Express' | 'Fastify',
     isAuth?: boolean,
     isGraphql?: boolean,
     isRest?: boolean
   ): void {
     this.projectPath = projectPath;
+    this.databaseService = databaseService;
     if (framework !== undefined) this.framework = framework;
     if (isAuth !== undefined) this.isAuth = isAuth;
     if (isGraphql !== undefined) this.isGraphql = isGraphql;
     if (isRest !== undefined) this.isRest = isRest;
   }
+
 
   public setModels(models: ProjectModel[]): void {
     this.models = models;
@@ -49,18 +58,27 @@ export class Template {
   /**
    * Orchestrates the template generation process for the project.
    */
-  public async codeTemplate(): Promise<void> {
-    await this.ensureDirectories();
-    await this.generateUtilityFiles();
-    await this.generateModelFiles();
-    await this.generateMainFile();
+  public async codeTemplate(modelsToGenerate?: ProjectModel[]): Promise<void> {
+    const isIncremental = !!modelsToGenerate;
+    const targets = modelsToGenerate || this.models;
 
-    if (this.framework === 'Fastify') {
-      await this.generateFastifyPlugins();
+    if (!isIncremental) {
+      await this.ensureDirectories();
+      await this.generateUtilityFiles();
+    }
+
+    await this.generateModelFiles(targets, isIncremental);
+    await this.generateRegistrationFiles();
+
+    if (!isIncremental) {
+      await this.generateMainFile();
+      if (this.framework === 'Fastify') {
+        await this.generateFastifyPlugins();
+      }
     }
 
     if (this.isGraphql) {
-      await this.generateGraphqlFiles();
+      await this.generateGraphqlFiles(targets, isIncremental);
     }
   }
 
@@ -100,8 +118,9 @@ export class Template {
     const utilsTemplates = [
       { target: "src/utils/config.ts", source: "common/config.ts" },
       { target: "src/utils/logger.ts", source: "common/logger.ts" },
-      { target: "src/utils/prisma.ts", source: "common/prisma-client.ts" },
+      ...this.databaseService.getTemplates()
     ];
+
 
     if (this.framework === 'Express') {
        utilsTemplates.push(
@@ -121,8 +140,8 @@ export class Template {
   /**
    * Generates files for each defined model.
    */
-  private async generateModelFiles(): Promise<void> {
-    for (const model of this.models) {
+  private async generateModelFiles(models: ProjectModel[], isIncremental: boolean): Promise<void> {
+    for (const model of models) {
       const name = model.name.toLowerCase();
       const modelTemplates = [
         { target: `src/interfaces/${name}.interface.ts`, source: "common/interface.ejs" },
@@ -143,19 +162,20 @@ export class Template {
         }
       }
 
-      // Skip User model if authentication is enabled, as it's handled by Authentication service
-      if (!(model.name === "User" && this.isAuth)) {
+      // Skip User and Role models if authentication is enabled, as they are handled by Authentication service or generated with specific logic
+      if (!((model.name === "User" || model.name === "Role") && this.isAuth)) {
         modelTemplates.push({
           target: `src/models/${name}.model.ts`,
-          source: "common/model.ejs",
+          source: this.databaseService.getModelTemplate(),
         });
       }
+
 
       for (const { target, source } of modelTemplates) {
         await this.processTemplate(source, target, {
           model,
           getZodValidator: this.getZodValidator.bind(this),
-        });
+        }, !isIncremental); // Only overwrite if not incremental
       }
     }
   }
@@ -174,34 +194,50 @@ export class Template {
   /**
    * Generates GraphQL-specific schema and resolver files.
    */
-  private async generateGraphqlFiles(): Promise<void> {
+  private async generateGraphqlFiles(models: ProjectModel[], isIncremental: boolean): Promise<void> {
     const graphqlDir = "src/graphql";
-    await fs.ensureDir(path.join(this.projectPath, graphqlDir));
+    if (!isIncremental) {
+      await fs.ensureDir(path.join(this.projectPath, graphqlDir));
 
-    // 1. Common
-    await fs.ensureDir(path.join(this.projectPath, graphqlDir, "common"));
-    await this.processTemplate("common/graphql/common.typeDefs.ejs", `${graphqlDir}/common/common.typeDefs.ts`, {});
-    await this.processTemplate("common/graphql/common.resolvers.ejs", `${graphqlDir}/common/common.resolvers.ts`, {});
-
-    // 2. Domains
-    for (const model of this.models) {
-      const domainDir = `${graphqlDir}/${model.name.toLowerCase()}`;
-      await fs.ensureDir(path.join(this.projectPath, domainDir));
-      await this.processTemplate("common/graphql/domain.typeDefs.ejs", `${domainDir}/${model.name.toLowerCase()}.typeDefs.ts`, { model });
-      await this.processTemplate("common/graphql/domain.resolvers.ejs", `${domainDir}/${model.name.toLowerCase()}.resolvers.ts`, { model });
+      // 1. Common
+      await fs.ensureDir(path.join(this.projectPath, graphqlDir, "common"));
+      await this.processTemplate("common/graphql/common.typeDefs.ejs", `${graphqlDir}/common/common.typeDefs.ts`, {});
+      await this.processTemplate("common/graphql/common.resolvers.ejs", `${graphqlDir}/common/common.resolvers.ts`, {});
     }
 
-    // 3. Auth
-    if (this.isAuth) {
+    // 2. Domains
+    for (const model of models) {
+      const domainDir = `${graphqlDir}/${model.name.toLowerCase()}`;
+      await fs.ensureDir(path.join(this.projectPath, domainDir));
+      await this.processTemplate("common/graphql/domain.typeDefs.ejs", `${domainDir}/${model.name.toLowerCase()}.typeDefs.ts`, { model }, !isIncremental);
+      await this.processTemplate("common/graphql/domain.resolvers.ejs", `${domainDir}/${model.name.toLowerCase()}.resolvers.ts`, { model }, !isIncremental);
+    }
+
+    // 3. Auth (Only on full generation)
+    if (!isIncremental && this.isAuth) {
       await fs.ensureDir(path.join(this.projectPath, graphqlDir, "auth"));
       await this.processTemplate("common/graphql/auth.typeDefs.ejs", `${graphqlDir}/auth/auth.typeDefs.ts`, {});
       await this.processTemplate("common/graphql/auth.resolvers.ejs", `${graphqlDir}/auth/auth.resolvers.ts`, {});
     }
 
-    // 4. Index (Merging)
+    // 4. Index (Merging - Always regenerate as it's safe)
     await this.processTemplate("common/graphql/index.ejs", `${graphqlDir}/index.ts`, {
       models: this.models,
     });
+  }
+
+  /**
+   * Generates registration files (Routers/Plugins) that combine all modules.
+   * These files are safe to overwrite.
+   */
+  private async generateRegistrationFiles(): Promise<void> {
+    if (!this.isRest) return;
+
+    if (this.framework === 'Express') {
+      await this.processTemplate("express/routing/index.ejs", "src/routes/index.ts", { models: this.models });
+    } else if (this.framework === 'Fastify') {
+      await this.processTemplate("fastify/routing/index.ejs", "src/routes/index.ts", { models: this.models });
+    }
   }
 
   /**
@@ -218,10 +254,15 @@ export class Template {
   private async processTemplate(
     sourceName: string,
     targetPath: string,
-    data: object
+    data: object,
+    overwrite: boolean = true
   ): Promise<void> {
     const templateFullPath = path.join(TEMPLATES_DIR, sourceName);
     const destinationPath = path.join(this.projectPath, targetPath);
+
+    if (!overwrite && (await fs.pathExists(destinationPath))) {
+      return;
+    }
 
     const templateContent = await fs.readFile(templateFullPath, "utf-8");
     const renderedContent = await ejs.render(templateContent, {
@@ -230,6 +271,7 @@ export class Template {
       isAuth: this.isAuth,
       isRest: this.isRest,
       isGraphql: this.isGraphql,
+      orm: this.databaseService.getOrmName(),
     }, { async: true });
 
     await fs.writeFile(destinationPath, renderedContent);
@@ -287,7 +329,8 @@ export class Template {
             .map((v) => `"${v}"`)
             .join(", ")}], { message: "Must be one of: ${enumValues.join(", ")}" })`;
         } else if (field.isRelation) {
-          validator += ".object({})";
+          // For relations, we often validate the ID field in the request body
+          validator = `z.string()`; // Default to string ID validation
         } else {
           validator += ".any()";
         }

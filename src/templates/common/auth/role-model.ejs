@@ -1,0 +1,13 @@
+import { z } from 'zod';
+
+export class RoleModel {
+  static schema = z.object({
+    name: z.string().min(1, { message: "Role name is required" }), // "user", "admin"
+  });
+
+  static validate(data: unknown) {
+    return this.schema.parse(data);
+  }
+}
+
+export default new RoleModel();

@@ -6,9 +6,11 @@ import {
   promptFieldDetails,
   stringValidations,
   promptModelName,
-} from "../utils/prisma-utils";
+} from "../utils/model-utils";
 
-export class Prisma {
+import { DatabaseService } from "../models/database-service.interface";
+
+export class Prisma implements DatabaseService {
   private models: ProjectModel[] = [];
   private projectPath: string;
   private enums: Map<string, Record<string, string>> = new Map();
@@ -21,6 +23,51 @@ export class Prisma {
     this.projectPath = projectPath;
     if (database) this.database = database;
   }
+
+  getDependencies(): string[] {
+    return ["prisma", "@prisma/client"];
+  }
+
+  getDevDependencies(): string[] {
+    return [];
+  }
+
+  getTemplates(): { target: string; source: string }[] {
+    return [
+      { target: "src/utils/prisma.ts", source: "common/prisma-client.ts" }
+    ];
+  }
+
+  getModelTemplate(): string {
+    return "common/model.ejs";
+  }
+
+  getOrmName(): string {
+    return "Prisma";
+  }
+
+
+  async generateSchema(): Promise<void> {
+    await this.generatePrismaSchema();
+  }
+
+  async generateModels(): Promise<ProjectModel[]> {
+    return this.generatePrismaModels();
+  }
+
+  async addModel(model: ProjectModel): Promise<void> {
+    const existingModelIndex = this.models.findIndex(
+      (m) => m.name === model.name
+    );
+    if (existingModelIndex >= 0) {
+      this.models[existingModelIndex] = model;
+    } else {
+      this.models.push(model);
+    }
+
+    await this.generateSchema();
+  }
+
 
   async generatePrismaModels() {
     while (true) {
@@ -147,6 +194,11 @@ export class Prisma {
 
       schemaContent += "}\n\n";
     });
+
+    schemaContent += `// Note: Prisma requires relations to be defined on both sides.\n`;
+    schemaContent += `// If you added a OneToMany relation, make sure to add the corresponding field in the target model.\n`;
+    schemaContent += `// Example: if Author has 'posts Post[]' with @relation("AuthorToPost"),\n`;
+    schemaContent += `// then Post must have 'author Author @relation("AuthorToPost", fields: [authorId], references: [id])' and 'authorId String'.\n`;
 
     try {
       await fs.writeFile(

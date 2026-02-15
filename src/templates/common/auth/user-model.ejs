@@ -1,15 +1,15 @@
-import prisma from '../utils/prisma';
+import db from '../utils/db'; // Generic DB client (prisma or mongoose)
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 
 export class UserModel {
-  private prisma = prisma;
+  private db = db;
   
   static schema = z.object({
     email: z.string().email({ message: "Invalid email format" }),
     password: z.string().min(6, { message: "Password must be at least 6 characters" }),
     name: z.string().optional(),
-    role: z.string().default("user")
+    roleId: z.string().min(1, { message: "Role is required" })
   });
 
   static loginSchema = z.object({
@@ -23,9 +23,10 @@ export class UserModel {
       email: validated.email,
       password: validated.password,
       name: validated.name ?? null, 
-      role: validated.role ?? "user" 
+      roleId: validated.roleId
     };
   }
+
 
   static validateLogin(data: unknown) {
     return this.loginSchema.parse(data);

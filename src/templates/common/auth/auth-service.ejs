@@ -1,4 +1,4 @@
-import prisma from '../utils/prisma';
+import db from '../utils/db';
 import jwt from 'jsonwebtoken';
 import { UserModel } from '../models/user.model';
 import { Secret, SignOptions } from 'jsonwebtoken';
@@ -6,10 +6,13 @@ import { UnauthorizedError, BadRequestError } from '../middleware/error.middlewa
 
 export class AuthService {
   async register(userData: any) {
-
-    const existingUser = await prisma.user.findUnique({
+    <% if (orm === 'Prisma') { %>
+    const existingUser = await db.user.findUnique({
       where: { email: userData.email }
     });
+    <% } else { %>
+    const existingUser = await UserModel.findOne({ email: userData.email });
+    <% } %>
 
     if (existingUser) {
       throw new BadRequestError('User with this email already exists');
@@ -17,27 +20,49 @@ export class AuthService {
 
     const hashedPassword = await UserModel.hashPassword(userData.password);
 
-    const user = await prisma.user.create({
+    // Default to 'user' role if none provided
+    <% if (orm === 'Prisma') { %>
+    let role = await db.role.findUnique({ where: { name: userData.role || 'user' } });
+    if (!role) {
+      role = await db.role.create({ data: { name: 'user' } });
+    }
+
+    const user = await db.user.create({
       data: {
         email: userData.email,
         password: hashedPassword,
         name: userData.name || null,
-        role: userData.role || 'user'
-      }
+        roleId: role.id
+      },
+      include: { role: true }
     });
+    <% } else { %>
+    // Mongoose implementation would go here
+    const user = await UserModel.create({
+      email: userData.email,
+      password: hashedPassword,
+      name: userData.name,
+      roleId: userData.role || 'user' // Simplified for Mongoose for now
+    });
+    <% } %>
 
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: <% if (orm === 'Prisma') { %> user.role.name <% } else { %> user.roleId <% } %>
     };
   }
 
   async login(email: string, password: string) {
-    const user = await prisma.user.findUnique({
-      where: { email }
+    <% if (orm === 'Prisma') { %>
+    const user = await db.user.findUnique({
+      where: { email },
+      include: { role: true }
     });
+    <% } else { %>
+    const user = await UserModel.findOne({ email }).populate('roleId');
+    <% } %>
 
     if (!user) {
       throw new UnauthorizedError('Invalid email or password');
@@ -56,7 +81,7 @@ export class AuthService {
       {
         userId: user.id,
         email: user.email,
-        role: user.role
+        role: <% if (orm === 'Prisma') { %> user.role.name <% } else { %> user.roleId <% } %>
       },
       jwtSecret,
       { expiresIn: jwtExpiresIn } as SignOptions
@@ -67,16 +92,21 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role
+        role: <% if (orm === 'Prisma') { %> user.role.name <% } else { %> user.roleId <% } %>
       },
       token
     };
   }
   
   async getUserById(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
+    <% if (orm === 'Prisma') { %>
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: { role: true }
     });
+    <% } else { %>
+    const user = await UserModel.findById(userId).populate('roleId');
+    <% } %>
 
     if (!user) {
       throw new BadRequestError('User not found');
@@ -86,7 +116,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: <% if (orm === 'Prisma') { %> user.role.name <% } else { %> user.roleId <% } %>
     };
   }
 }

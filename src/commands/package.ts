@@ -1,17 +1,28 @@
 import path from "path";
 import fs from "fs-extra";
+
 export class Package {
-  private projectPath!: string;
+  private projectPath: string;
   private framework: 'Express' | 'Fastify' = 'Express';
   private isGraphql: boolean = false;
+  private dbDependencies: string[] = [];
+  private dbDevDependencies: string[] = [];
+
   constructor(projectPath: string) {
     this.projectPath = projectPath;
   }
+
   setProjectPath(projectPath: string, framework?: 'Express' | 'Fastify', isGraphql?: boolean) {
     this.projectPath = projectPath;
     if (framework !== undefined) this.framework = framework;
     if (isGraphql !== undefined) this.isGraphql = isGraphql;
   }
+
+  setDatabaseDependencies(deps: string[], devDeps: string[]) {
+    this.dbDependencies = deps;
+    this.dbDevDependencies = devDeps;
+  }
+
   async generatePackageJson() {
     const packageJson: any = {
       name: path.basename(this.projectPath),
@@ -20,14 +31,12 @@ export class Package {
       scripts: {
         start: "nodemon",
         build: "tsc",
-        generate: "prisma generate",
-        migrate: "prisma db push",
+        generate: this.dbDependencies.includes("prisma") ? "prisma generate" : "echo 'No generate script needed'",
+        migrate: this.dbDependencies.includes("prisma") ? "prisma db push" : "echo 'No migrate script needed'",
       },
       dependencies: {
-        prisma: "^5.2.0",
         zod: "^3.22.2",
         winston: "^3.8.2",
-        "@prisma/client": "^6.5.0",
         dotenv: "^16.0.3",
         "fs-extra": "^11.3.0",
       },
@@ -39,6 +48,14 @@ export class Package {
         typescript: "^5.2.2",
       },
     };
+
+    // Dynamic DB dependencies
+    this.dbDependencies.forEach(dep => {
+      packageJson.dependencies[dep] = "latest";
+    });
+    this.dbDevDependencies.forEach(dep => {
+      packageJson.devDependencies[dep] = "latest";
+    });
 
     if (this.framework === "Express") {
       packageJson.dependencies = {
@@ -86,12 +103,14 @@ export class Package {
         };
       }
     }
+
     await fs.writeJSON(
       path.join(this.projectPath, "package.json"),
       packageJson,
       { spaces: 2 },
     );
   }
+
   async createTsConfig() {
     const tsConfig = {
       compilerOptions: {
@@ -114,3 +133,4 @@ export class Package {
     });
   }
 }
+
