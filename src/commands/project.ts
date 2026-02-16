@@ -141,7 +141,7 @@ export class Project {
     // Finalize project setup
     await this.setupProjectDependencies();
     console.log(
-      chalk.green(`✅ Project ${responses.projectName} created successfully!`),
+      chalk.green(`Project ${responses.projectName} created successfully!`),
     );
   }
 

@@ -32,19 +32,19 @@ export class Add {
     const configPath = path.join(this.projectPath, "node-craft.json");
 
     if (!(await fs.pathExists(configPath))) {
-      console.log(chalk.red("❌ Error: node-craft.json not found. Are you in a NodeCraft project directory?"));
+      console.log(chalk.red(" Error: node-craft.json not found. Are you in a NodeCraft project directory?"));
       return;
     }
 
     const config = await fs.readJSON(configPath);
     console.log(chalk.blue(`🛠 Detected project: ${config.projectName} (${config.framework})`));
 
-    // 1. Prompt for new model
+    // Prompt for new model
     const modelName = await promptModelName();
     if (!modelName) return;
 
     if (config.models.some((m: any) => m.name.toLowerCase() === modelName.toLowerCase())) {
-      console.log(chalk.yellow(`⚠️ Model ${modelName} already exists.`));
+      console.log(chalk.yellow(`Model ${modelName} already exists.`));
       return;
     }
 
@@ -58,16 +58,14 @@ export class Add {
       } else if (field.type === "Int" || field.type === "Float") {
         await numberValidations(field);
       }
-      // Note: Enum and other complex types might need more integration here if we want full parity with 'create'
-      
       newModel.fields.push(field);
     }
 
-    // 2. Update config (The Brain)
+    // Update config (The Brain)
     config.models.push(newModel);
     await fs.writeJSON(configPath, config, { spaces: 2 });
 
-    // 3. Configure services from config
+    // Configure services from config
     if (config.orm === "Mongoose") {
       this.databaseService = new Mongoose(this.projectPath);
     } else if (config.orm === "TypeORM") {
@@ -92,14 +90,14 @@ export class Add {
     );
     this.templateService.setModels(config.models);
 
-    // 4. Regenerate Schema
+    // Regenerate Schema
     await this.databaseService.generateSchema();
 
 
-    // 5. Generate Code for the new model (Incremental)
+    //  Generate Code for the new model (Incremental)
     await this.templateService.codeTemplate([newModel]);
 
-    console.log(chalk.green(`\n✅ Module ${modelName} added successfully!`));
+    console.log(chalk.green(`\n Module ${modelName} added successfully!`));
     console.log(chalk.yellow("Don't forget to run:"));
     console.log(chalk.cyan("  npm run generate && npm run migrate"));
   }
