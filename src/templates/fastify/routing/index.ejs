@@ -6,8 +6,10 @@ import { FastifyInstance } from 'fastify';
  */
 export default async function (app: FastifyInstance) {
 <% for (const model of models) { %>
-<% if (model.name !== "User") { %>
   await app.register(import('./<%= model.name.toLowerCase() %>.routes'), { prefix: '/api/<%= model.name.toLowerCase() %>s' });
 <% } %>
-<% } %>
+
+  <% if (isAuth) { %>
+  await app.register(import('./auth.routes'), { prefix: '/api/auth' });
+  <% } %>
 }
