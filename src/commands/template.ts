@@ -96,6 +96,13 @@ export class Template {
 
     const directories = [...coreDirs];
 
+    if (this.databaseService.getOrmName() === 'Prisma') {
+      directories.push("prisma");
+      if (this.framework === 'Fastify') {
+        directories.push("src/plugins");
+      }
+    }
+
     if (this.isRest) {
       directories.push("src/controllers", "src/routes");
     }
@@ -128,8 +135,11 @@ export class Template {
          { target: "src/middleware/validator-middleware.ts", source: "express/middleware/validator.middleware.ts" },
          { target: "src/middleware/error.middleware.ts", source: "express/middleware/error.middleware.ts" }
        );
+    } else if (this.framework === 'Fastify') {
+       utilsTemplates.push(
+         { target: "src/middleware/error.middleware.ts", source: "fastify/middleware/error.middleware.ts" }
+       );
     }
-    // Add Fastify equivalents here when available
 
     for (const { target, source } of utilsTemplates) {
       // Utilities currently don't use model data but we pass standard flags for consistency
@@ -244,7 +254,9 @@ export class Template {
    * Generates Fastify-specific plugins.
    */
   private async generateFastifyPlugins(): Promise<void> {
-    await this.processTemplate("fastify/plugins/prisma.ejs", "src/plugins/prisma.ts", {});
+    if (this.databaseService.getOrmName() === 'Prisma') {
+      await this.processTemplate("fastify/plugins/prisma.ejs", "src/plugins/prisma.ts", {});
+    }
   }
 
   /**

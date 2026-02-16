@@ -52,8 +52,13 @@ export class Project {
         type: "list",
         name: "orm",
         message: "Select an ORM/ODM",
-        choices: ["Prisma", "Mongoose", "TypeORM", "Sequelize"],
-        default: "Prisma",
+        choices: (answers: any) => {
+          if (answers.database === "MongoDB") {
+            return ["Mongoose", "Prisma", "TypeORM"];
+          }
+          return ["Prisma", "TypeORM", "Sequelize"];
+        },
+        default: (answers: any) => answers.database === "MongoDB" ? "Mongoose" : "Prisma",
         when: (answers: any) => answers.database === "MongoDB" || answers.database === "PostgreSQL" || answers.database === "MySQL",
       },
       {
@@ -173,32 +178,9 @@ export class Project {
    * Generates the basic directory structure and configuration files.
    */
   public async generateProjectStructure(responses: any): Promise<void> {
-    const directories = [
-      "src/models",
-      "src/services",
-      "src/utils",
-    ];
-
-    if (responses.orm === "Prisma") {
-      directories.push("prisma");
-    }
-
-
-    if (responses.enableRest) {
-      directories.push("src/controllers", "src/routes");
-    }
-
-    if (responses.enableGraphql) {
-      directories.push("src/graphql");
-    }
-
-    if (responses.framework === "Fastify") {
-      directories.push("src/plugins");
-    }
-
-    for (const dir of directories) {
-      await fs.ensureDir(path.join(this.projectPath, dir));
-    }
+    // Directories are now managed by the Template service during codeTemplate()
+    // but we still ensure the root src directory for package.json/tsconfig dependencies if any
+    await fs.ensureDir(path.join(this.projectPath, "src"));
 
     await this.packageService.generatePackageJson();
     await this.createGitignore();

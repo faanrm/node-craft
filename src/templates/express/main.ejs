@@ -13,6 +13,8 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { schema } from './graphql';
 <% } %>
 
+import db from './utils/db';
+
 <% if (isRest) { %>
 import apiRouter from './routes';
 <% } %>
@@ -40,6 +42,17 @@ app.use(cors({
 
 // 2. Feature Setup
 const bootstrap = async () => {
+  // Database connection
+  <% if (orm === 'Mongoose') { %>
+  await db();
+  <% } else if (orm === 'Sequelize') { %>
+  await db.authenticate();
+  logger.info('Sequelize connection established');
+  <% } else if (orm === 'TypeORM') { %>
+  await db.initialize();
+  logger.info('TypeORM data source initialized');
+  <% } %>
+  // Prisma connects lazily, no explicit call needed here
   <% if (isGraphql) { %>
   const server = new ApolloServer({
     schema,

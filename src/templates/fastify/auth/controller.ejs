@@ -1,0 +1,54 @@
+import { FastifyReply, FastifyRequest } from 'fastify';
+import AuthService from '../services/auth.service';
+import { UnauthorizedError } from '../middleware/error.middleware';
+
+export class AuthController {
+  register = async (req: FastifyRequest, reply: FastifyReply) => {
+    const user = await AuthService.register(req.body);
+    
+    reply.code(201).send({
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  };
+
+  login = async (req: FastifyRequest, reply: FastifyReply) => {
+    const { email, password } = req.body as any;
+    const result = await AuthService.login(email, password);
+    
+    reply.send({
+      message: 'Login successful',
+      token: result.token,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role
+      }
+    });
+  };
+
+  me = async (req: FastifyRequest, reply: FastifyReply) => {
+    if (!req.user) {
+      throw new UnauthorizedError('Authentication required');
+    }
+    
+    const user = await AuthService.getUserById(req.user.id);
+    
+    reply.send({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role
+      }
+    });
+  };
+}
+
+export default new AuthController();

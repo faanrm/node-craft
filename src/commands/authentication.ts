@@ -138,8 +138,18 @@ export class Authentication {
             { target: "src/routes/auth.routes.ts", source: "express/auth/routes.ejs" }
           );
         }
+    } else if (this.framework === 'Fastify') {
+        templates.push(
+            { target: "src/middleware/auth.middleware.ts", source: "fastify/auth/middleware.ejs" }
+        );
+
+        if (this.isRest) {
+            templates.push(
+                { target: "src/controllers/auth.controller.ts", source: "fastify/auth/controller.ejs" },
+                { target: "src/routes/auth.routes.ts", source: "fastify/auth/routes.ejs" }
+            );
+        }
     }
-    // Add Fastify auth templates here
 
     for (const { target, source } of templates) {
       await this.processTemplate(source, target, { 

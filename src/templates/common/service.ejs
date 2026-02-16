@@ -1,37 +1,60 @@
+<% if (orm === 'Prisma') { %>
 import { Prisma, <%= model.name %> } from '@prisma/client';
-import prisma from '../utils/prisma';
+import db from '../utils/db';
+<% } else { %>
+import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
+import db from '../utils/db'; // In case we need raw db access
+<% } %>
 import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
 
 export class <%= model.name %>Service {
-  private prisma = prisma;
-
-  async create(data: Create<%= model.name %>Input): Promise<<%= model.name %>> {
-    return this.prisma.<%= model.name.toLowerCase() %>.create({ 
-      data: data as any // Type assertion needed for complex relations or enums
+  async create(data: Create<%= model.name %>Input): Promise<any> {
+    <% if (orm === 'Prisma') { %>
+    return db.<%= model.name.toLowerCase() %>.create({ 
+      data: data as any 
     });
+    <% } else { %>
+    return <%= model.name %>Model.create(data);
+    <% } %>
   }
 
-  async findAll(): Promise<<%= model.name %>[]> {
-    return this.prisma.<%= model.name.toLowerCase() %>.findMany();
+  async findAll(): Promise<any[]> {
+    <% if (orm === 'Prisma') { %>
+    return db.<%= model.name.toLowerCase() %>.findMany();
+    <% } else { %>
+    return <%= model.name %>Model.find();
+    <% } %>
   }
 
-  async findById(id: string): Promise<<%= model.name %> | null> {
-    return this.prisma.<%= model.name.toLowerCase() %>.findUnique({ 
+  async findById(id: string): Promise<any | null> {
+    <% if (orm === 'Prisma') { %>
+    return db.<%= model.name.toLowerCase() %>.findUnique({ 
       where: { id } 
     });
+    <% } else { %>
+    return <%= model.name %>Model.findById(id);
+    <% } %>
   }
 
-  async update(id: string, data: Update<%= model.name %>Input): Promise<<%= model.name %>> {
-    return this.prisma.<%= model.name.toLowerCase() %>.update({ 
+  async update(id: string, data: Update<%= model.name %>Input): Promise<any> {
+    <% if (orm === 'Prisma') { %>
+    return db.<%= model.name.toLowerCase() %>.update({ 
       where: { id }, 
       data: data as any
     });
+    <% } else { %>
+    return <%= model.name %>Model.findByIdAndUpdate(id, data, { new: true });
+    <% } %>
   }
 
-  async delete(id: string): Promise<<%= model.name %>> {
-    return this.prisma.<%= model.name.toLowerCase() %>.delete({ 
+  async delete(id: string): Promise<any> {
+    <% if (orm === 'Prisma') { %>
+    return db.<%= model.name.toLowerCase() %>.delete({ 
       where: { id } 
     });
+    <% } else { %>
+    return <%= model.name %>Model.findByIdAndDelete(id);
+    <% } %>
   }
 }
 

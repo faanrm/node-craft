@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import <%= model.name %>Service from '../../services/<%= model.name.toLowerCase() %>.service';
-import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../../interfaces/<%= model.name.toLowerCase() %>.interface';
+import <%= model.name %>Service from '../services/<%= model.name.toLowerCase() %>.service';
+import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
 
 export class <%= model.name %>Controller {
   create = async (req: FastifyRequest, reply: FastifyReply) => {

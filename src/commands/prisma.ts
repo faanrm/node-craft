@@ -34,7 +34,7 @@ export class Prisma implements DatabaseService {
 
   getTemplates(): { target: string; source: string }[] {
     return [
-      { target: "src/utils/prisma.ts", source: "common/prisma-client.ts" }
+      { target: "src/utils/db.ts", source: "common/prisma-client.ts" }
     ];
   }
 

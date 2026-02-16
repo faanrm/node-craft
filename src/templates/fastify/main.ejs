@@ -19,8 +19,21 @@ const start = async () => {
   await app.register(helmet);
 
   // 2. Core Plugins
+  <% if (orm === 'Prisma') { %>
   const { default: prismaPlugin } = await import('./plugins/prisma');
   await app.register(prismaPlugin);
+  <% } else { %>
+  const { default: db } = await import('./utils/db');
+  <% if (orm === 'Mongoose') { %>
+  await db();
+  <% } else if (orm === 'Sequelize') { %>
+  await db.authenticate();
+  logger.info('Sequelize connection established');
+  <% } else if (orm === 'TypeORM') { %>
+  await db.initialize();
+  logger.info('TypeORM data source initialized');
+  <% } %>
+  <% } %>
 
   // 3. GraphQL Setup
   <% if (isGraphql) { %>

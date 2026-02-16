@@ -1,0 +1,11 @@
+import { FastifyInstance } from 'fastify';
+import AuthController from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth.middleware';
+// import { validateRequest } from '../middleware/validator-middleware'; // Fastify uses schemas for validation usually
+import { UserModel } from '../models/user.model';
+
+export default async function (fastify: FastifyInstance) {
+  fastify.post('/register', AuthController.register);
+  fastify.post('/login', AuthController.login);
+  fastify.get('/me', { preHandler: [authenticate] }, AuthController.me);
+}

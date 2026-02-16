@@ -1,14 +1,16 @@
-import prisma from '../utils/prisma';
+import db from '../utils/db';
 import { z } from 'zod';
+
 export class <%= model.name %>Model {
-  private prisma = prisma;
+  <% if (orm === 'Prisma') { %>
+  private db = db;
+  <% } %>
   
   static schema = z.object({
     <% model.fields.forEach(function(field, index) { %>
     <%= field.name %>: <%- getZodValidator(field) %><%= index < model.fields.length - 1 ? ',' : '' %>
     <% }); %>
   });
-
 }
 
 export default new <%= model.name %>Model();

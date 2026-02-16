@@ -17,7 +17,7 @@ export class CLI {
         program
             .name('node-craft')
             .version('1.0.0')
-            .description('🚀 NodeCraft: A high-performance CLI tool to scaffold production-ready Node.js projects .')
+            .description('🚀 NodeCraft: A high-performance CLI tool to scaffold  Node.js projects .')
 
         program
             .command('create')
