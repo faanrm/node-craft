@@ -1,3 +1,44 @@
+<% if (orm === 'Mongoose') { %>
+import { Schema, model, Document } from 'mongoose';
+
+const RoleSchema = new Schema({
+  name: { type: String, required: true, unique: true }
+}, { timestamps: true });
+
+export const RoleModel = model('Role', RoleSchema);
+
+<% } else if (orm === 'Sequelize') { %>
+import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
+import { UserModel } from './user.model';
+
+@Table({ tableName: 'roles', timestamps: true })
+export class Role extends Model {
+  @Column({ type: DataType.STRING, unique: true, allowNull: false })
+  name!: string;
+
+  @HasMany(() => UserModel)
+  users!: UserModel[];
+}
+export { Role as RoleModel };
+
+<% } else if (orm === 'TypeORM') { %>
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, OneToMany } from 'typeorm';
+import { UserModel } from './user.model';
+
+@Entity('roles')
+export class RoleModel extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ unique: true })
+  name!: string;
+
+  @OneToMany(() => UserModel, user => user.role)
+  users!: UserModel[];
+}
+
+<% } else { %>
+// Prisma (Generic Helper)
 import { z } from 'zod';
 
 export class RoleModel {
@@ -11,3 +52,4 @@ export class RoleModel {
 }
 
 export default new RoleModel();
+<% } %>

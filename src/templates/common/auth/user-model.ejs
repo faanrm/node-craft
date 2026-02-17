@@ -1,4 +1,95 @@
-import db from '../utils/db'; // Generic DB client (prisma or mongoose)
+<% if (orm === 'Mongoose') { %>
+import { Schema, model, Document } from 'mongoose';
+import bcrypt from 'bcrypt';
+import { IUser } from '../interfaces/user.interface';
+
+const UserSchema = new Schema<IUser & Document>({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String },
+  roleId: { type: Schema.Types.ObjectId, ref: 'Role', required: true }
+}, { timestamps: true });
+
+UserSchema.statics.hashPassword = async function(password: string) {
+  return bcrypt.hash(password, 10);
+};
+
+UserSchema.statics.comparePassword = async function(password: string, hash: string) {
+  return bcrypt.compare(password, hash);
+};
+
+export const UserModel = model<IUser & Document>('User', UserSchema) as any;
+
+<% } else if (orm === 'Sequelize') { %>
+import { Table, Column, Model, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
+import bcrypt from 'bcrypt';
+import { Role } from './role.model';
+
+@Table({ tableName: 'users', timestamps: true })
+export class UserModel extends Model {
+  @Column({ type: DataType.STRING, unique: true, allowNull: false })
+  email!: string;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  password!: string;
+
+  @Column({ type: DataType.STRING })
+  name!: string;
+
+  @ForeignKey(() => Role)
+  @Column(DataType.INTEGER)
+  roleId!: number;
+
+  @BelongsTo(() => Role)
+  role!: Role;
+
+  static async hashPassword(password: string) {
+    return bcrypt.hash(password, 10);
+  }
+
+  static async comparePassword(password: string, hash: string) {
+    return bcrypt.compare(password, hash);
+  }
+}
+
+<% } else if (orm === 'TypeORM') { %>
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity, ManyToOne, JoinColumn } from 'typeorm';
+import bcrypt from 'bcrypt';
+import { RoleModel as Role } from './role.model';
+
+@Entity('users')
+export class UserModel extends BaseEntity {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column({ unique: true })
+  email!: string;
+
+  @Column()
+  password!: string;
+
+  @Column({ nullable: true })
+  name!: string;
+
+  @ManyToOne(() => Role)
+  @JoinColumn({ name: 'roleId' })
+  role!: Role;
+
+  @Column()
+  roleId!: string;
+
+  static async hashPassword(password: string) {
+    return bcrypt.hash(password, 10);
+  }
+
+  static async comparePassword(password: string, hash: string) {
+    return bcrypt.compare(password, hash);
+  }
+}
+
+<% } else { %>
+// Prisma (Generic Helper)
+import db from '../utils/db';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 
@@ -27,7 +118,6 @@ export class UserModel {
     };
   }
 
-
   static validateLogin(data: unknown) {
     return this.loginSchema.parse(data);
   }
@@ -46,3 +136,4 @@ export class UserModel {
 }
 
 export default new UserModel();
+<% } %>
