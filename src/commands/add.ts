@@ -86,7 +86,8 @@ export class Add {
       config.framework,
       config.features.authentication,
       config.features.graphql,
-      config.features.rest
+      config.features.rest,
+      config.database
     );
     this.templateService.setModels(config.models);
 

@@ -11,7 +11,7 @@ export class <%= model.name %>Controller {
   });
 
   findAll = catchAsync(async (req: Request, res: Response) => {
-    const <%= model.name.toLowerCase() %>s = await <%= model.name %>Service.findAll();
+    const <%= model.name.toLowerCase() %>s = await <%= model.name %>Service.findAll(req.query);
     res.json(<%= model.name.toLowerCase() %>s);
   });
 

@@ -9,7 +9,7 @@ export class <%= model.name %>Controller {
   };
 
   findAll = async (req: FastifyRequest, reply: FastifyReply) => {
-    const <%= model.name.toLowerCase() %>s = await <%= model.name %>Service.findAll();
+    const <%= model.name.toLowerCase() %>s = await <%= model.name %>Service.findAll(req.query);
     reply.send(<%= model.name.toLowerCase() %>s);
   };
 

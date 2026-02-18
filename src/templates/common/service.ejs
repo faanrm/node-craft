@@ -18,11 +18,25 @@ export class <%= model.name %>Service {
     <% } %>
   }
 
-  async findAll(): Promise<any[]> {
+  async findAll(query: any = {}): Promise<any[]> {
+    const { page = 1, limit = 10, sort, ...filters } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
     <% if (orm === 'Prisma') { %>
-    return db.<%= model.name.toLowerCase() %>.findMany();
+    const orderBy = sort ? { [sort.split(':')[0]]: sort.split(':')[1] } : undefined;
+    return db.<%= model.name.toLowerCase() %>.findMany({
+      where: filters,
+      skip,
+      take,
+      orderBy
+    });
     <% } else { %>
-    return <%= model.name %>Model.find();
+    const sortObj = sort ? { [sort.split(':')[0]]: sort.split(':')[1] === 'desc' ? -1 : 1 } : {};
+    return <%= model.name %>Model.find(filters)
+      .sort(sortObj as any)
+      .skip(skip)
+      .limit(take);
     <% } %>
   }
 

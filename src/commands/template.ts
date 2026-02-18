@@ -16,6 +16,7 @@ export class Template {
   private isRest!: boolean;
   private models: ProjectModel[] = [];
   private databaseService!: DatabaseService;
+  private database: string = 'PostgreSQL';
 
   constructor(
     projectPath: string,
@@ -23,7 +24,8 @@ export class Template {
     framework: 'Express' | 'Fastify' = 'Express',
     isAuth: boolean = false,
     isGraphql: boolean = false,
-    isRest: boolean = true
+    isRest: boolean = true,
+    database: string = 'PostgreSQL'
   ) {
     this.projectPath = projectPath;
     this.databaseService = databaseService;
@@ -31,6 +33,7 @@ export class Template {
     this.isAuth = isAuth;
     this.isGraphql = isGraphql;
     this.isRest = isRest;
+    this.database = database;
   }
 
 
@@ -40,7 +43,8 @@ export class Template {
     framework?: 'Express' | 'Fastify',
     isAuth?: boolean,
     isGraphql?: boolean,
-    isRest?: boolean
+    isRest?: boolean,
+    database?: string
   ): void {
     this.projectPath = projectPath;
     this.databaseService = databaseService;
@@ -48,6 +52,7 @@ export class Template {
     if (isAuth !== undefined) this.isAuth = isAuth;
     if (isGraphql !== undefined) this.isGraphql = isGraphql;
     if (isRest !== undefined) this.isRest = isRest;
+    if (database !== undefined) this.database = database;
   }
 
 
@@ -140,6 +145,8 @@ export class Template {
          { target: "src/middleware/error.middleware.ts", source: "fastify/middleware/error.middleware.ts" }
        );
     }
+
+    // Infrastructure (Docker) - REMOVED
 
     for (const { target, source } of utilsTemplates) {
       // Utilities currently don't use model data but we pass standard flags for consistency
@@ -284,6 +291,7 @@ export class Template {
       isRest: this.isRest,
       isGraphql: this.isGraphql,
       orm: this.databaseService.getOrmName(),
+      database: this.database,
     }, { async: true });
 
     await fs.writeFile(destinationPath, renderedContent);
