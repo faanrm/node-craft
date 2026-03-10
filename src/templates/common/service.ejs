@@ -1,9 +1,12 @@
 <% if (orm === 'Prisma') { %>
 import { Prisma, <%= model.name %> } from '@prisma/client';
 import db from '../utils/db';
+<% } else if (orm === 'TypeORM' || orm === 'Sequelize') { %>
+import { <%= model.name %> } from '../models/<%= model.name.toLowerCase() %>.model';
+import db from '../utils/db';
 <% } else { %>
 import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
-import db from '../utils/db'; // In case we need raw db access
+import db from '../utils/db';
 <% } %>
 import { Create<%= model.name %>Input, Update<%= model.name %>Input } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
 
@@ -13,6 +16,12 @@ export class <%= model.name %>Service {
     return db.<%= model.name.toLowerCase() %>.create({ 
       data: data as any 
     });
+    <% } else if (orm === 'TypeORM') { %>
+    const entity = new <%= model.name %>();
+    Object.assign(entity, data);
+    return db.manager.save(entity);
+    <% } else if (orm === 'Sequelize') { %>
+    return <%= model.name %>.create(data);
     <% } else { %>
     return <%= model.name %>Model.create(data);
     <% } %>
@@ -31,6 +40,22 @@ export class <%= model.name %>Service {
       take,
       orderBy
     });
+    <% } else if (orm === 'TypeORM') { %>
+    const [data] = await db.getRepository(<%= model.name %>).findAndCount({
+      where: filters as any,
+      skip,
+      take,
+      order: sort ? { [sort.split(':')[0]]: sort.split(':')[1] } : undefined
+    });
+    return data;
+    <% } else if (orm === 'Sequelize') { %>
+    const sortObj = sort ? { [sort.split(':')[0]]: sort.split(':')[1] === 'desc' ? 'DESC' : 'ASC' } : {};
+    return <%= model.name %>.findAll({
+      where: filters,
+      limit: take,
+      offset: skip,
+      order: Object.entries(sortObj)
+    });
     <% } else { %>
     const sortObj = sort ? { [sort.split(':')[0]]: sort.split(':')[1] === 'desc' ? -1 : 1 } : {};
     return <%= model.name %>Model.find(filters)
@@ -45,6 +70,10 @@ export class <%= model.name %>Service {
     return db.<%= model.name.toLowerCase() %>.findUnique({ 
       where: { id } 
     });
+    <% } else if (orm === 'TypeORM') { %>
+    return db.getRepository(<%= model.name %>).findOne({ where: { id } });
+    <% } else if (orm === 'Sequelize') { %>
+    return <%= model.name %>.findByPk(id);
     <% } else { %>
     return <%= model.name %>Model.findById(id);
     <% } %>
@@ -56,6 +85,16 @@ export class <%= model.name %>Service {
       where: { id }, 
       data: data as any
     });
+    <% } else if (orm === 'TypeORM') { %>
+    const repo = db.getRepository(<%= model.name %>);
+    const entity = await repo.findOne({ where: { id } });
+    if (!entity) return null;
+    Object.assign(entity, data);
+    return repo.save(entity);
+    <% } else if (orm === 'Sequelize') { %>
+    const [updated] = await <%= model.name %>.update(data, { where: { id } });
+    if (!updated) return null;
+    return <%= model.name %>.findByPk(id);
     <% } else { %>
     return <%= model.name %>Model.findByIdAndUpdate(id, data, { new: true });
     <% } %>
@@ -66,6 +105,15 @@ export class <%= model.name %>Service {
     return db.<%= model.name.toLowerCase() %>.delete({ 
       where: { id } 
     });
+    <% } else if (orm === 'TypeORM') { %>
+    const repo = db.getRepository(<%= model.name %>);
+    const entity = await repo.findOne({ where: { id } });
+    if (!entity) return false;
+    await repo.remove(entity);
+    return true;
+    <% } else if (orm === 'Sequelize') { %>
+    const deleted = await <%= model.name %>.destroy({ where: { id } });
+    return !!deleted;
     <% } else { %>
     return <%= model.name %>Model.findByIdAndDelete(id);
     <% } %>

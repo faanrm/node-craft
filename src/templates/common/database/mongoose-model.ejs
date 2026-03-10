@@ -1,17 +1,22 @@
 import { Schema, model, Document } from 'mongoose';
 import { I<%= model.name %> } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
+<% const enumNames = model.fields.filter(f => f.enumName).map(f => f.enumName); %>
+<% if (enumNames.length > 0) { %><% enumNames.forEach(enumName => { %>import { <%= enumName %> } from '../enums/<%= enumName %>';
+<% }); %><% } %>
 
 const <%= model.name %>Schema = new Schema<I<%= model.name %> & Document>({
 <% model.fields.forEach(field => { %>
   <%= field.name %>: {
     type: <%- 
       field.isRelation ? 'Schema.Types.ObjectId' :
+      field.enumName ? 'String' :
       field.type === 'String' ? 'String' : 
       field.type === 'Int' || field.type === 'Float' ? 'Number' : 
       field.type === 'Boolean' ? 'Boolean' : 
       field.type === 'DateTime' ? 'Date' : 'Schema.Types.Mixed' 
     %>,
     <% if (field.isRelation) { %>ref: '<%= field.relationModel %>',<% } %>
+    <% if (field.enumName && field.enumValues) { %>enum: [<%= Object.values(field.enumValues).map(v => `"${v}"`).join(', ') %>],<% } %>
     required: <%= !field.isOptional %>,
     unique: <%= !!field.isUnique %>,
     <% if (field.minLength !== undefined) { %>minlength: <%= field.minLength %>,<% } %>

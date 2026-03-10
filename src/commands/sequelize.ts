@@ -1,11 +1,14 @@
 import type { ProjectModel } from "../models/project-model";
 import { DatabaseService } from "../models/database-service.interface";
-import { promptModelName, promptFieldDetails, stringValidations, numberValidations } from "../utils/model-utils";
+import { promptModelName, promptFieldDetails, stringValidations, numberValidations, promptEnumValues } from "../utils/model-utils";
+import fs from "fs-extra";
+import path from "path";
 
 export class SequelizeService implements DatabaseService {
   private models: ProjectModel[] = [];
   private projectPath: string;
   private database: string = "";
+  private enums: Map<string, Record<string, string>> = new Map();
 
   constructor(projectPath: string) {
     this.projectPath = projectPath;
@@ -58,6 +61,9 @@ export class SequelizeService implements DatabaseService {
            await stringValidations(field);
         } else if (field.type === "Int" || field.type === "Float") {
           await numberValidations(field);
+        } else if (field.type === "Enum" && field.enumName && field.enumValues) {
+          this.enums.set(field.enumName, field.enumValues);
+          field.type = field.enumName;
         }
 
         model.fields.push(field);
@@ -76,5 +82,24 @@ export class SequelizeService implements DatabaseService {
 
   setModels(models: ProjectModel[]) {
     this.models = models;
+  }
+
+  getEnums(): Map<string, Record<string, string>> {
+    return this.enums;
+  }
+
+  async generateEnums(): Promise<void> {
+    const enumsDir = path.join(this.projectPath, "src/enums");
+    await fs.ensureDir(enumsDir);
+
+    this.enums.forEach((values, name) => {
+      let enumContent = `export enum ${name} {\n`;
+      Object.entries(values).forEach(([key, value]) => {
+        enumContent += `  ${key} = "${value}",\n`;
+      });
+      enumContent += "}\n";
+
+      fs.writeFile(path.join(enumsDir, `${name}.ts`), enumContent);
+    });
   }
 }

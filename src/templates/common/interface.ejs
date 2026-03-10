@@ -1,10 +1,16 @@
+<% if (orm === 'Prisma') { %>
 import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
+<% } else if (orm === 'TypeORM' || orm === 'Sequelize') { %>
+import { <%= model.name %> } from '../models/<%= model.name.toLowerCase() %>.model';
+<% } else { %>
+import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
+<% } %>
 import { z } from 'zod';
 
 /**
  * Standard interface for <%= model.name %>
  */
-export type I<%= model.name %> = z.infer<typeof <%= model.name %>Model.schema>;
+export type I<%= model.name %> = z.infer<typeof <%= orm === 'TypeORM' || orm === 'Sequelize' ? model.name : model.name + 'Model' %>.schema>;
 
 /**
  * Input for creating a <%= model.name %>

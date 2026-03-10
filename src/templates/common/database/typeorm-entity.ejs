@@ -1,4 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, OneToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
+<% const enumNames = model.fields.filter(f => f.enumName).map(f => f.enumName); %>
+<% if (enumNames.length > 0) { %><% enumNames.forEach(enumName => { %>import { <%= enumName %> } from '../enums/<%= enumName %>';
+<% }); %><% } %>
 
 @Entity()
 export class <%= model.name %> {
@@ -15,6 +18,14 @@ export class <%= model.name %> {
   @JoinColumn()
   <%= field.name %>!: <%= field.relationModel %>;
     <% } %>
+  <% } else if (field.enumName && field.enumValues) { %>
+  @Column({
+    type: "enum",
+    enum: <%= field.type %>,
+    nullable: <%= field.isOptional %>,
+    unique: <%= !!field.isUnique %>,
+  })
+  <%= field.name %>!: <%= field.type %>;
   <% } else { %>
   @Column({
     type: <%= 

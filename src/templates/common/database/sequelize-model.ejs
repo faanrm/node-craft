@@ -1,5 +1,8 @@
 import { Table, Column, Model, DataType, HasMany, BelongsTo, ManyToMany, ForeignKey } from 'sequelize-typescript';
 import { I<%= model.name %> } from '../interfaces/<%= model.name.toLowerCase() %>.interface';
+<% const enumNames = model.fields.filter(f => f.enumName).map(f => f.enumName); %>
+<% if (enumNames.length > 0) { %><% enumNames.forEach(enumName => { %>import { <%= enumName %> } from '../enums/<%= enumName %>';
+<% }); %><% } %>
 
 @Table({
   tableName: '<%= model.name.toLowerCase() %>s',
@@ -19,6 +22,13 @@ export class <%= model.name %> extends Model<I<%= model.name %>> {
   @BelongsTo(() => <%= field.relationModel %>)
   <%= field.name %>!: <%= field.relationModel %>;
     <% } %>
+  <% } else if (field.enumName && field.enumValues) { %>
+  @Column({
+    type: DataType.ENUM(<%= Object.values(field.enumValues).map(v => `"${v}"`).join(', ') %>),
+    allowNull: <%= field.isOptional %>,
+    unique: <%= !!field.isUnique %>,
+  })
+  <%= field.name %>!: <%= field.type %>;
   <% } else { %>
   @Column({
     type: <%= 

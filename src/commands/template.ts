@@ -97,6 +97,7 @@ export class Template {
       "src/services",
       "src/interfaces",
       "src/utils",
+      "src/enums",
     ];
 
     const directories = [...coreDirs];
@@ -224,6 +225,9 @@ export class Template {
 
     // 2. Domains
     for (const model of models) {
+      if ((model.name === "User" || model.name === "Role") && this.isAuth) {
+        continue;
+      }
       const domainDir = `${graphqlDir}/${model.name.toLowerCase()}`;
       await fs.ensureDir(path.join(this.projectPath, domainDir));
       await this.processTemplate("common/graphql/domain.typeDefs.ejs", `${domainDir}/${model.name.toLowerCase()}.typeDefs.ts`, { model }, !isIncremental);
@@ -239,7 +243,7 @@ export class Template {
 
     // 4. Index (Merging - Always regenerate as it's safe)
     await this.processTemplate("common/graphql/index.ejs", `${graphqlDir}/index.ts`, {
-      models: this.models,
+      models: this.models.filter(m => !((m.name === "User" || m.name === "Role") && this.isAuth)),
     });
   }
 

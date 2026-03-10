@@ -135,6 +135,11 @@ export class Project {
     // Ensure schema is fully generated (including auth models) before finishing
     await this.databaseService.generateSchema();
 
+    // Generate enums for TypeORM, Sequelize, and Mongoose
+    if (typeof (this.databaseService as any).generateEnums === "function") {
+      await (this.databaseService as any).generateEnums();
+    }
+
     // Generate config with models included
     await this.generateNodeCraftConfig(responses, models);
 

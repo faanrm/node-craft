@@ -1,5 +1,9 @@
 import { gql } from '@apollo/server';
 
+<% const enumNames = model.fields.filter(f => f.enumName).map(f => f.enumName); %>
+<% if (enumNames.length > 0) { %><% enumNames.forEach(enumName => { %>import { <%= enumName %> } from '../../enums/<%= enumName %>';
+<% }); %><% } %>
+
 export const <%= model.name.toLowerCase() %>TypeDefs = gql`
   """
   <%= model.name %> model representation
@@ -9,19 +13,19 @@ export const <%= model.name.toLowerCase() %>TypeDefs = gql`
     createdAt: DateTime!
     updatedAt: DateTime!
     <% model.fields.forEach(field => { %>
-    <%= field.name %>: <%= field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %><%= !field.isOptional ? '!' : '' %>
+    <%= field.name %>: <%= field.enumName ? field.enumName : field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %><%= !field.isOptional ? '!' : '' %>
     <% }) %>
   }
 
   input Create<%= model.name %>Input {
     <% model.fields.forEach(field => { %>
-    <%= field.name %>: <%= field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %><%= !field.isOptional ? '!' : '' %>
+    <%= field.name %>: <%= field.enumName ? field.enumName : field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %><%= !field.isOptional ? '!' : '' %>
     <% }) %>
   }
 
   input Update<%= model.name %>Input {
     <% model.fields.forEach(field => { %>
-    <%= field.name %>: <%= field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %>
+    <%= field.name %>: <%= field.enumName ? field.enumName : field.type === 'String' ? 'String' : field.type === 'Int' ? 'Int' : field.type === 'Float' ? 'Float' : field.type === 'Boolean' ? 'Boolean' : field.type === 'DateTime' ? 'DateTime' : field.type === 'Json' ? 'JSON' : 'String' %>
     <% }) %>
   }
 
