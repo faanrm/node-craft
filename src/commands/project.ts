@@ -20,7 +20,7 @@ export class Project {
     private databaseService: DatabaseService,
     private templateService: Template,
     private projectPath: string,
-  ) {}
+  ) { }
 
   /**
    * Main entry point to create a new project.
@@ -58,8 +58,12 @@ export class Project {
           }
           return ["Prisma", "TypeORM", "Sequelize"];
         },
-        default: (answers: any) => answers.database === "MongoDB" ? "Mongoose" : "Prisma",
-        when: (answers: any) => answers.database === "MongoDB" || answers.database === "PostgreSQL" || answers.database === "MySQL",
+        default: (answers: any) =>
+          answers.database === "MongoDB" ? "Mongoose" : "Prisma",
+        when: (answers: any) =>
+          answers.database === "MongoDB" ||
+          answers.database === "PostgreSQL" ||
+          answers.database === "MySQL",
       },
       {
         type: "confirm",
@@ -91,7 +95,7 @@ export class Project {
 
     // Initial project setup
     await fs.ensureDir(this.projectPath);
-    
+
     // Switch database service based on user choice
     if (responses.orm === "Mongoose") {
       this.databaseService = new Mongoose(this.projectPath);
@@ -101,10 +105,8 @@ export class Project {
       this.databaseService = new SequelizeService(this.projectPath);
     }
 
-    
     this.configureServices(responses);
     await this.generateProjectStructure(responses);
-
 
     let models: any[] = [];
 
@@ -120,8 +122,9 @@ export class Project {
     // Optional authentication setup
     if (responses.enableAuthentication) {
       try {
-        const authModels =
-          await this.authenticationService.setupAuthentication(this.databaseService);
+        const authModels = await this.authenticationService.setupAuthentication(
+          this.databaseService,
+        );
         models.push(...authModels);
       } catch (error) {
         console.error("Error setting up authentication:", error);
@@ -132,7 +135,6 @@ export class Project {
     await this.templateService.setModels(models);
     await this.templateService.codeTemplate();
 
-    // Ensure schema is fully generated (including auth models) before finishing
     await this.databaseService.generateSchema();
 
     // Generate enums for TypeORM, Sequelize, and Mongoose
@@ -154,10 +156,14 @@ export class Project {
    * Configures all internal services with the selected project details.
    */
   private configureServices(responses: any): void {
-    this.packageService.setProjectPath(this.projectPath, responses.framework, responses.enableGraphql);
+    this.packageService.setProjectPath(
+      this.projectPath,
+      responses.framework,
+      responses.enableGraphql,
+    );
     this.packageService.setDatabaseDependencies(
       this.databaseService.getDependencies(),
-      this.databaseService.getDevDependencies()
+      this.databaseService.getDevDependencies(),
     );
     this.databaseService.setProjectPath(this.projectPath, responses.database);
     this.templateService.setProjectPath(
@@ -169,13 +175,12 @@ export class Project {
       responses.enableRest,
     );
 
-
     this.authenticationService.setProjectPath(
       this.projectPath,
       this.databaseService,
       responses.enableRest,
       responses.enableGraphql,
-      responses.framework
+      responses.framework,
     );
   }
 
@@ -183,8 +188,6 @@ export class Project {
    * Generates the basic directory structure and configuration files.
    */
   public async generateProjectStructure(responses: any): Promise<void> {
-    // Directories are now managed by the Template service during codeTemplate()
-    // but we still ensure the root src directory for package.json/tsconfig dependencies if any
     await fs.ensureDir(path.join(this.projectPath, "src"));
 
     await this.packageService.generatePackageJson();
@@ -196,7 +199,10 @@ export class Project {
   /**
    * Generates the node-craft.json configuration file.
    */
-  private async generateNodeCraftConfig(responses: any, models: any[]): Promise<void> {
+  private async generateNodeCraftConfig(
+    responses: any,
+    models: any[],
+  ): Promise<void> {
     const config = {
       projectName: responses.projectName,
       framework: responses.framework,
@@ -207,9 +213,9 @@ export class Project {
         graphql: responses.enableGraphql,
         rest: responses.enableRest,
       },
-      models: models.map(m => ({
+      models: models.map((m) => ({
         name: m.name,
-        fields: m.fields
+        fields: m.fields,
       })),
       createdAt: new Date().toISOString(),
       version: "2.0-alpha",
