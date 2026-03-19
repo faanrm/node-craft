@@ -12,6 +12,8 @@
     "verbatimModuleSyntax": false,
     "noEmit": false,
     "emitDeclarationOnly": false,
+    "declaration": true,
+    "declarationMap": true,
 
     // Best practices
     "strict": true,
