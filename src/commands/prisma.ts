@@ -25,7 +25,7 @@ export class Prisma implements DatabaseService {
   }
 
   getDependencies(): string[] {
-    return ["prisma", "@prisma/client"];
+    return ["prisma", "@prisma/client", "dotenv"];
   }
 
   getDevDependencies(): string[] {
@@ -127,7 +127,23 @@ export class Prisma implements DatabaseService {
         idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
     }
 
-    schemaContent += `datasource db {\n  provider = "${dbProvider}"\n  url      = env(\"DATABASE_URL\")\n}\n\n`;
+    schemaContent += `datasource db {\n  provider = "${dbProvider}"\n}\n\n`;
+
+    const prismaConfigContent = `import "dotenv/config";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  schema: "schema.prisma",
+  migrations: {
+    path: "migrations",
+  },
+  datasource: {
+    url: process.env["DATABASE_URL"],
+  },
+});
+`;
+    await fs.writeFile(path.join(this.projectPath, "prisma", "prisma.config.ts"), prismaConfigContent);
+
 
     const envPath = path.join(this.projectPath, ".env");
     let envContent = "";

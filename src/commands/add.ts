@@ -61,7 +61,7 @@ export class Add {
       newModel.fields.push(field);
     }
 
-    // Update config (The Brain)
+    // Update config 
     config.models.push(newModel);
     await fs.writeJSON(configPath, config, { spaces: 2 });
 

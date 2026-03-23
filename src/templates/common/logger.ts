@@ -1,4 +1,3 @@
-// @ts-nocheck
 import winston from 'winston';
 import path from 'path';
 import fs from 'fs-extra';
@@ -20,12 +19,12 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'api' },
   transports: [
-    new winston.transports.File({ 
-      filename: path.join(logDir, 'error.log'), 
-      level: 'error' 
+    new winston.transports.File({
+      filename: path.join(logDir, 'error.log'),
+      level: 'error'
     }),
-    new winston.transports.File({ 
-      filename: path.join(logDir, 'combined.log') 
+    new winston.transports.File({
+      filename: path.join(logDir, 'combined.log')
     }),
   ]
 });
