@@ -165,6 +165,8 @@ export default defineConfig({
 
     await fs.writeFile(envPath, envContent);
 
+    this.extractEnumsFromModels();
+
     this.enums.forEach((values, name) => {
       schemaContent += `enum ${name} {\n`;
       Object.entries(values).forEach(([key, value]) => {
@@ -196,11 +198,15 @@ export default defineConfig({
             return;
           }
         } else {
-          if (this.enums.has(field.type)) {
-            fieldLine += field.type;
-          } else {
-            fieldLine += field.type;
+          let finalType = field.type;
+
+          if (field.type === "Enum" && field.enumName) {
+            finalType = field.enumName;
+          } else if (this.enums.has(field.type)) {
+            finalType = field.type;
           }
+
+          fieldLine += finalType;
 
           if (field.isOptional) fieldLine += "?";
           if (field.isUnique) fieldLine += " @unique";
@@ -245,5 +251,15 @@ export default defineConfig({
     }
 
     await this.generatePrismaSchema();
+  }
+
+  private extractEnumsFromModels() {
+    this.models.forEach((model) => {
+      model.fields.forEach((field) => {
+        if (field.enumName && field.enumValues) {
+          this.enums.set(field.enumName, field.enumValues);
+        }
+      });
+    });
   }
 }
