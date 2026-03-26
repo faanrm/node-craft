@@ -1,25 +1,34 @@
 # NodeCraft
 
-A tool to quickly generate a Node.js project structure.
+NodeCraft is a powerful CLI and programmatic project scaffolding tool for Node.js. It helps you jumpstart your backend development by generating a modern, production-ready project structure in seconds.
 
+## Key Features
 
-### Quick Initialization
+- **Framework Flexibility**: Support for both **Express** and **Fastify**.
+- **Modern GraphQL Support**: Integrated **Apollo Server v4** with correct `graphql-tag` imports.
+- **Strict TypeScript Typing**:
+  - Automatically generated interfaces for your models (`IUser`, `IDomain`, etc.).
+  - Typed GraphQL resolvers using generated interfaces and inputs.
+  - Standardized `GraphQLContext` for type-safe context handling.
+- **Database Integration**: Built-in support for **Prisma**, **Mongoose**, **TypeORM**, and **Sequelize**.
+- **Authentication**: One-step authentication setup including JWT, bcrypt, and middleware.
+- **Project Structure**: Clean, modular architecture with separate layers for models, services, controllers, and GraphQL.
 
-NodeCraft quickly generates a Node.js project structure in a single command.
+## Quick Start
 
-### Basic Structure
+Generate a new project with a single command:
 
-NodeCraft generates the essential folders and files to start a new project (e.g. a `src` folder, an `index.ts` file, etc.).
+```bash
+npx @krakennn/node-craft my-awesome-api
+```
 
-### Easy to Use
+### Installation (Global)
 
-NodeCraft has a simple and intuitive command-line interface.
-
-## Installation
-
-To use NodeCraft, you need to install it globally on your machine. Make sure you have Node.js and npm (or yarn) installed.
-To install NodeCraft globally, run the following command:
-
-```sh
+```bash
 npm i -g @krakennn/node-craft
 ```
+
+## How it Works
+
+NodeCraft uses a template-based system (EJS) to generate your project. It can be used via CLI for interactive scaffolding or programmatically for integration into other tools.
+
