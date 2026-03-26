@@ -1,8 +1,10 @@
 import authService from '../../services/auth.service';
+import { IUser, CreateUserInput } from '../../interfaces/user.interface';
+import { GraphQLContext } from '../common/common.resolvers';
 
 export const authResolvers = {
   Query: {
-    me: async (_: any, __: any, context: any) => {
+    me: async (_: any, __: any, context: GraphQLContext): Promise<IUser | null> => {
       if (!context.user) return null;
       try {
         return await authService.getUserById(context.user.id);
@@ -12,14 +14,14 @@ export const authResolvers = {
     },
   },
   Mutation: {
-    register: async (_: any, { input }: { input: any }) => {
+    register: async (_: any, { input }: { input: CreateUserInput }): Promise<any> => {
       try {
         return await authService.register(input);
       } catch (error: any) {
         throw new Error(`Registration failed: ${error.message}`);
       }
     },
-    login: async (_: any, { email, password }: any) => {
+    login: async (_: any, { email, password }: any): Promise<any> => {
       try {
         return await authService.login(email, password);
       } catch (error: any) {

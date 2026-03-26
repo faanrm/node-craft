@@ -1,5 +1,13 @@
 import { GraphQLScalarType, Kind } from 'graphql';
 
+export interface GraphQLContext {
+  user?: {
+    id: string;
+    email: string;
+    [key: string]: any;
+  };
+}
+
 const JSONScalar = new GraphQLScalarType({
   name: 'JSON',
   description: 'Custom JSON scalar type',

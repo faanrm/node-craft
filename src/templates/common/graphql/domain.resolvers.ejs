@@ -1,8 +1,10 @@
 import <%= model.name.toLowerCase() %>Service from '../../services/<%= model.name.toLowerCase() %>.service';
+import { I<%= model.name %>, Create<%= model.name %>Input, Update<%= model.name %>Input } from '../../interfaces/<%= model.name.toLowerCase() %>.interface';
+import { GraphQLContext } from '../common/common.resolvers';
 
 export const <%= model.name.toLowerCase() %>Resolvers = {
   Query: {
-    get<%= model.name %>s: async (_: any, __: any, context: any) => {
+    get<%= model.name %>s: async (_: any, __: any, context: GraphQLContext): Promise<I<%= model.name %>[]> => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
         return await <%= model.name.toLowerCase() %>Service.findAll();
@@ -10,7 +12,7 @@ export const <%= model.name.toLowerCase() %>Resolvers = {
         throw new Error(`Failed to fetch <%= model.name %>s: ${error.message}`);
       }
     },
-    get<%= model.name %>: async (_: any, { id }: { id: string }, context: any) => {
+    get<%= model.name %>: async (_: any, { id }: { id: string }, context: GraphQLContext): Promise<I<%= model.name %> | null> => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
         return await <%= model.name.toLowerCase() %>Service.findById(id);
@@ -20,7 +22,7 @@ export const <%= model.name.toLowerCase() %>Resolvers = {
     },
   },
   Mutation: {
-    create<%= model.name %>: async (_: any, { input }: { input: any }, context: any) => {
+    create<%= model.name %>: async (_: any, { input }: { input: Create<%= model.name %>Input }, context: GraphQLContext): Promise<I<%= model.name %>> => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
         return await <%= model.name.toLowerCase() %>Service.create(input);
@@ -28,7 +30,7 @@ export const <%= model.name.toLowerCase() %>Resolvers = {
         throw new Error(`Failed to create <%= model.name %>: ${error.message}`);
       }
     },
-    update<%= model.name %>: async (_: any, { id, input }: { id: string, input: any }, context: any) => {
+    update<%= model.name %>: async (_: any, { id, input }: { id: string, input: Update<%= model.name %>Input }, context: GraphQLContext): Promise<I<%= model.name %>> => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
         return await <%= model.name.toLowerCase() %>Service.update(id, input);
@@ -36,7 +38,7 @@ export const <%= model.name.toLowerCase() %>Resolvers = {
         throw new Error(`Failed to update <%= model.name %>: ${error.message}`);
       }
     },
-    delete<%= model.name %>: async (_: any, { id }: { id: string }, context: any) => {
+    delete<%= model.name %>: async (_: any, { id }: { id: string }, context: GraphQLContext): Promise<boolean> => {
       <% if (isAuth) { %>if (!context.user) throw new Error('Authentication required');<% } %>
       try {
         await <%= model.name.toLowerCase() %>Service.delete(id);

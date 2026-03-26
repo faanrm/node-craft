@@ -97,6 +97,7 @@ export class Package {
 					...packageJson.dependencies,
 					"@apollo/server": "^4.7.1",
 					graphql: "^16.6.0",
+					"graphql-tag": "^2.12.6",
 					"@graphql-tools/schema": "^10.0.0",
 					"@graphql-tools/merge": "^9.0.0",
 				};
@@ -105,6 +106,7 @@ export class Package {
 					...packageJson.dependencies,
 					"@apollo/server": "^4.7.1",
 					graphql: "^16.6.0",
+					"graphql-tag": "^2.12.6",
 					"@graphql-tools/schema": "^10.0.0",
 					"@graphql-tools/merge": "^9.0.0",
 					"@as-integrations/fastify": "^2.1.1",

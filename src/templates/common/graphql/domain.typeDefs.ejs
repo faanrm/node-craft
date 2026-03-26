@@ -1,4 +1,4 @@
-import { gql } from '@apollo/server';
+import { gql } from 'graphql-tag';
 
 <% const enumNames = model.fields.filter(f => f.enumName).map(f => f.enumName); %>
 <% if (enumNames.length > 0) { %><% enumNames.forEach(enumName => { %>import { <%= enumName %> } from '../../enums/<%= enumName %>';
