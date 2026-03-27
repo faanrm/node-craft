@@ -31,7 +31,9 @@ export class Package {
 		const packageJson: any = {
 			name: path.basename(this.projectPath),
 			description: "Generated project by node-craft",
-			main: "dist/index.ts",
+			version: "1.0.0",
+			type: "module",
+			main: "dist/index.js",
 			scripts: {
 				start: "nodemon",
 				build: "tsc",

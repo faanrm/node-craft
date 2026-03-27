@@ -1,4 +1,4 @@
-import { GraphQLScalarType } from 'graphql';
+import { GraphQLScalarType, Kind } from 'graphql';
 
 export interface GraphQLContext {
   user?: {
@@ -14,10 +14,10 @@ const JSONScalar = new GraphQLScalarType({
   parseValue(value: any) { return value; },
   serialize(value: any) { return value; },
   parseLiteral(ast: any) {
-    if (ast.kind === 'ObjectValue') {
+    if (ast.kind === Kind.OBJECT) {
       const value = Object.create(null);
       ast.fields.forEach(field => {
-        value[field.name.value] = field.value.kind === 'ObjectValue' ? JSON.parse(JSON.stringify(field.value)) : (field.value as any).value;
+        value[field.name.value] = field.value.kind === Kind.OBJECT ? JSON.parse(JSON.stringify(field.value)) : (field.value as any).value;
       });
       return value;
     }
