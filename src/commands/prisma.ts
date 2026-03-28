@@ -144,6 +144,21 @@ export default defineConfig({
 `;
     await fs.writeFile(path.join(this.projectPath, "prisma", "prisma.config.ts"), prismaConfigContent);
 
+    // Dedicated tsconfig for prisma/ so the IDE can resolve "prisma/config" subpath export
+    const prismaTsConfig = {
+      compilerOptions: {
+        module: "Node16",
+        moduleResolution: "Node16",
+        esModuleInterop: true,
+        skipLibCheck: true,
+      },
+    };
+    await fs.writeJSON(
+      path.join(this.projectPath, "prisma", "tsconfig.json"),
+      prismaTsConfig,
+      { spaces: 2 },
+    );
+
 
     const envPath = path.join(this.projectPath, ".env");
     let envContent = "";

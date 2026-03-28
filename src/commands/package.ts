@@ -32,7 +32,6 @@ export class Package {
 			name: path.basename(this.projectPath),
 			description: "Generated project by node-craft",
 			version: "1.0.0",
-			type: "module",
 			main: "dist/index.js",
 			scripts: {
 				start: "nodemon",
@@ -131,8 +130,8 @@ export class Package {
 				skipLibCheck: true,
 				esModuleInterop: true,
 				allowSyntheticDefaultImports: true,
-				module: "NodeNext",
-				moduleResolution: "nodenext",
+				module: "CommonJS",
+				moduleResolution: "Node",
 				sourceMap: true,
 				noImplicitAny: true,
 				baseUrl: "src",
