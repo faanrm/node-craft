@@ -71,7 +71,10 @@ const bootstrap = async () => {
   <% } %>
 };
 
-await bootstrap();
+bootstrap().catch(err => {
+  logger.error('Failed to bootstrap application', err);
+  process.exit(1);
+});
 
 // 3. Final middleware & Hello
 app.get('/hello', (req: Request, res: Response) => {

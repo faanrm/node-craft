@@ -35,7 +35,12 @@ export class Package {
 			main: "dist/index.js",
 			scripts: {
 				start: "nodemon",
-				build: "tsc",
+				build: this.dbDependencies.includes("prisma")
+					? "prisma generate && tsc"
+					: "tsc",
+				postinstall: this.dbDependencies.includes("prisma")
+					? "prisma generate"
+					: undefined,
 				generate: this.dbDependencies.includes("prisma")
 					? "prisma generate"
 					: "echo 'No generate script needed'",

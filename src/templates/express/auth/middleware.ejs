@@ -36,9 +36,16 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as TokenPayload;
     
+<% if (orm === 'Prisma') { %>
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      include: { role: true }
+    });
+<% } else { %>
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId }
     });
+<% } %>
     
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
@@ -47,7 +54,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     req.user = {
       id: user.id,
       email: user.email,
-      role: user.role
+<% if (orm === 'Prisma') { %>
+      role: (user as any).role?.name || decoded.role
+<% } else { %>
+      role: (user as any).role || decoded.role
+<% } %>
     };
     
     next();

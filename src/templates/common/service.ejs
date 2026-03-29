@@ -1,5 +1,4 @@
 <% if (orm === 'Prisma') { %>
-import { Prisma, <%= model.name %> } from '@prisma/client';
 import db from '../utils/db';
 <% } else if (orm === 'TypeORM' || orm === 'Sequelize') { %>
 import { <%= model.name %> } from '../models/<%= model.name.toLowerCase() %>.model';

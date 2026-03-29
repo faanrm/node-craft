@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+<% if (orm === 'Prisma') { %>
 import { Prisma } from "@prisma/client";
+<% } %>
 import { logger } from "../utils/logger";
 
 export enum HttpStatusCode {
@@ -95,6 +97,7 @@ export const errorHandler = (
         {} as Record<string, string>,
       ),
     };
+<% if (orm === 'Prisma') { %>
   } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
       case "P2002":
@@ -121,6 +124,7 @@ export const errorHandler = (
           status: HttpStatusCode.INTERNAL_SERVER,
         };
     }
+<% } %>
   } else if (err instanceof AppError) {
     apiError = {
       message: err.message,
