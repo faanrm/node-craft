@@ -33,10 +33,12 @@ const DEFAULT_USER_MODEL: ProjectModel = {
 		{ name: "name", type: "String", isOptional: true, isUnique: false },
 		{
 			name: "role",
-			type: "Role @relation(fields: [roleId], references: [id])\n  roleId String",
-			isOptional: false,
+			type: "Role",
+			isOptional: true,
 			isUnique: false,
-			isRelation: false,
+			isRelation: true,
+			relationType: "OneToOne",
+			relationModel: "Role",
 		},
 	],
 };
@@ -50,10 +52,12 @@ const DEFAULT_ROLE_MODEL: ProjectModel = {
 		{ name: "name", type: "String", isOptional: false, isUnique: true },
 		{
 			name: "users",
-			type: "User[]",
+			type: "User",
 			isOptional: false,
 			isUnique: false,
-			isRelation: false,
+			isRelation: true,
+			relationType: "OneToMany",
+			relationModel: "User",
 		},
 	],
 };

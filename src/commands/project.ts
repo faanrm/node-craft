@@ -119,13 +119,20 @@ export class Project {
       }
     }
 
-    // Optional authentication setup
+    // authentication setup
     if (responses.enableAuthentication) {
       try {
         const authModels = await this.authenticationService.setupAuthentication(
           this.databaseService,
         );
-        models.push(...authModels);
+        for (const authModel of authModels) {
+          const index = models.findIndex((m) => m.name === authModel.name);
+          if (index >= 0) {
+            models[index] = authModel;
+          } else {
+            models.push(authModel);
+          }
+        }
       } catch (error) {
         console.error("Error setting up authentication:", error);
       }
