@@ -1,34 +1,63 @@
-# NodeCraft
+<div align="center">
+  <h1>🚀 Node-Craft</h1>
+  <p><strong>The Ultimate Low-Code / No-Code Node.js Project Generator</strong></p>
+  <p>Instantly scaffold production-ready backend applications with Express or Fastify, Prisma or TypeORM, GraphQL or REST, and built-in JWT Authentication.</p>
 
-NodeCraft is a powerful CLI and programmatic project scaffolding tool for Node.js. It helps you jumpstart your backend development by generating a modern, production-ready project structure in seconds.
+  [![npm version](https://img.shields.io/npm/v/@krakennn/node-craft.svg?style=flat-square)](https://www.npmjs.com/package/@krakennn/node-craft)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+</div>
 
-## Key Features
 
-- **Framework Flexibility**: Support for both **Express** and **Fastify**.
-- **Modern GraphQL Support**: Integrated **Apollo Server v4** with correct `graphql-tag` imports.
-- **Strict TypeScript Typing**:
-  - Automatically generated interfaces for your models (`IUser`, `IDomain`, etc.).
-  - Typed GraphQL resolvers using generated interfaces and inputs.
-  - Standardized `GraphQLContext` for type-safe context handling.
-- **Database Integration**: Built-in support for **Prisma**, **Mongoose**, **TypeORM**, and **Sequelize**.
-- **Authentication**: One-step authentication setup including JWT, bcrypt, and middleware.
-- **Project Structure**: Clean, modular architecture with separate layers for models, services, controllers, and GraphQL.
+### Key Features
+- **Framework Flexibility**: Choose between **Express** or **Fastify**.
+- **Database Agnostic**: Support for **PostgreSQL**, **MySQL**, and **MongoDB**.
+- **Top-Tier ORMs**: Integrated with **Prisma**, **TypeORM**, **Sequelize**, or **Mongoose**.
+-**API Styles**: Automatically generate **REST APIs** or **GraphQL** (Apollo Server v4).
+-**Turnkey Security**: Pre-configured JWT authentication, bcrypt hashing, Helmet, and CORS.
+-**Data Modeling**: Design your models directly in the CLI. Node-Craft will automatically generate the corresponding Prisma schemas, interfaces, controllers, and services for you.
+-**Strict TypeScript**: 100% typed output, from GraphQL resolvers to Request/Response objects.
 
-## Quick Start
+---
 
-Generate a new project with a single command:
+## 💻 Quick Start
+
+You can generate a new project instantly using `npx` (no installation required):
 
 ```bash
-npx @krakennn/node-craft my-awesome-api
+npx @krakennn/node-craft@latest create
 ```
 
-### Installation (Global)
+### Global Installation
+
+If you generate projects often, install it globally:
 
 ```bash
-npm i -g @krakennn/node-craft
+npm install -g @krakennn/node-craft@latest
+# or using yarn
+yarn global add @krakennn/node-craft@latest
 ```
 
-## How it Works
+Then run the CLI wizard from anywhere:
 
-NodeCraft uses a template-based system (EJS) to generate your project. It can be used via CLI for interactive scaffolding or programmatically for integration into other tools.
+```bash
+node-craft create
+```
 
+---
+
+## Adding New Models
+
+Once you have generated your `node-craft` project, you don't have to start over to add a new model.
+Navigate inside your generated project directory (where `node-craft.json` is located) and run:
+
+```bash
+node-craft add
+```
+
+This will launch the interactive wizard again specifically to add a **new entity** (like a `Post`, `Comment`, `Order`) to your *existing* project. Node-Craft will intelligently generate the new Controller, Service, Interfaces, and update your Prisma/TypeORM schema without overwriting your existing code!
+
+After adding the module, remember to update your database:
+```bash
+npm run generate
+npm run migrate
+```
