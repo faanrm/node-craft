@@ -95,11 +95,13 @@ export class Add {
     await this.databaseService.generateSchema();
 
 
-    //  Generate Code for the new model (Incremental)
+    //  Generate Code for the new model
     await this.templateService.codeTemplate([newModel]);
 
     console.log(chalk.green(`\n Module ${modelName} added successfully!`));
-    console.log(chalk.yellow("Don't forget to run:"));
-    console.log(chalk.cyan("  npm run generate && npm run migrate"));
+    if (config.orm === "Prisma") {
+      console.log(chalk.yellow("Don't forget to run:"));
+      console.log(chalk.cyan("  npm run generate && npm run migrate"));
+    }
   }
 }

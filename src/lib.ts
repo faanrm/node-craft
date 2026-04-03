@@ -17,6 +17,8 @@ import { Template } from "./commands/template";
 import { Authentication } from "./commands/authentication";
 import type { DatabaseService } from "./models/database-service.interface";
 import type { ProjectModel } from "./models/project-model";
+import fs from "fs-extra";
+import path from "path";
 
 export interface ProgrammaticConfig {
     projectName: string;
@@ -93,7 +95,6 @@ export async function createProjectProgrammatic(
     );
 
     // Generate base structure 
-    const fs = await import("fs-extra");
     await fs.ensureDir(projectPath);
     await fs.ensureDir(`${projectPath}/src`);
 
@@ -137,8 +138,6 @@ async function writeNodeCraftConfig(
     config: ProgrammaticConfig,
     models: ProjectModel[]
 ): Promise<void> {
-    const fs = await import("fs-extra");
-    const path = await import("path");
 
     const nodeCraftConfig = {
         version: "2.0",

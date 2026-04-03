@@ -8,11 +8,16 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/bin/node-craft.d.ts",
+      "import": "./dist/bin/node-craft.js",
+      "require": "./dist/bin/node-craft.js",
       "default": "./dist/bin/node-craft.js"
     },
     "./lib": {
-      "default": "./dist/src/lib.js",
-      "types": "./dist/src/lib.d.ts"
+      "types": "./dist/src/lib.d.ts",
+      "import": "./dist/src/lib.js",
+      "require": "./dist/src/lib.js",
+      "default": "./dist/src/lib.js"
     }
   },
   "files": [
