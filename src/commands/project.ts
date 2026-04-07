@@ -13,7 +13,6 @@ import { SequelizeService } from "./sequelize";
 
 import { DatabaseService } from "../models/database-service.interface";
 
-/** Centralized ORM availability by database */
 const ORM_BY_DATABASE: Record<string, string[]> = {
   PostgreSQL: ["Prisma", "TypeORM", "Sequelize"],
   MySQL: ["Prisma", "TypeORM", "Sequelize"],
