@@ -13,6 +13,13 @@ import { SequelizeService } from "./sequelize";
 
 import { DatabaseService } from "../models/database-service.interface";
 
+/** Centralized ORM availability by database */
+const ORM_BY_DATABASE: Record<string, string[]> = {
+  PostgreSQL: ["Prisma", "TypeORM", "Sequelize"],
+  MySQL: ["Prisma", "TypeORM", "Sequelize"],
+  MongoDB: ["Mongoose", "Prisma"],
+};
+
 export class Project {
   constructor(
     private authenticationService: Authentication,
@@ -52,18 +59,12 @@ export class Project {
         type: "list",
         name: "orm",
         message: "Select an ORM/ODM",
-        choices: (answers: any) => {
-          if (answers.database === "MongoDB") {
-            return ["Mongoose", "Prisma", "TypeORM"];
-          }
-          return ["Prisma", "TypeORM", "Sequelize"];
-        },
+        choices: (answers: any) =>
+          ORM_BY_DATABASE[answers.database] ?? ["Prisma"],
         default: (answers: any) =>
-          answers.database === "MongoDB" ? "Mongoose" : "Prisma",
+          (ORM_BY_DATABASE[answers.database] ?? ["Prisma"])[0],
         when: (answers: any) =>
-          answers.database === "MongoDB" ||
-          answers.database === "PostgreSQL" ||
-          answers.database === "MySQL",
+          Object.keys(ORM_BY_DATABASE).includes(answers.database),
       },
       {
         type: "confirm",
