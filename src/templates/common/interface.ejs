@@ -1,16 +1,20 @@
-<% if (orm === 'Prisma') { %>
-import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
-<% } else if (orm === 'TypeORM' || orm === 'Sequelize') { %>
-import { <%= model.name %> } from '../models/<%= model.name.toLowerCase() %>.model';
-<% } else { %>
-import { <%= model.name %>Model } from '../models/<%= model.name.toLowerCase() %>.model';
+<% const enumNames = model.fields.filter(f => f.enumName).map(f => f.enumName); %>
+<% if (enumNames.length > 0) { %>
+<% enumNames.forEach(enumName => { %>import { <%= enumName %> } from '../enums/<%= enumName %>';
+<% }); %>
 <% } %>
-import { z } from 'zod';
 
 /**
  * Standard interface for <%= model.name %>
  */
-export type I<%= model.name %> = z.infer<typeof <%= orm === 'TypeORM' || orm === 'Sequelize' ? model.name : model.name + 'Model' %>.schema>;
+export interface I<%= model.name %> {
+  id: string | any;
+<% model.fields.forEach(field => { %>
+  <%= field.name %><%= field.isOptional ? '?' : '' %>: <%= getTSType(field) %>;
+<% }) %>
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 /**
  * Input for creating a <%= model.name %>

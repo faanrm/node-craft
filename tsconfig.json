@@ -20,6 +20,7 @@
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
+    "types": ["vitest/globals"],
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
@@ -30,7 +31,9 @@
   },
   "include": [
     "src/**/*",
-    "bin/*"
+    "bin/*",
+    "tests/**/*",
+    "vitest.config.ts"
   ],
   "exclude": [
     "node_modules",

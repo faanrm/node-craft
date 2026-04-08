@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+<% if (orm === 'Prisma') { %>
 import prisma from '../utils/db';
+<% } else { %>
+import { UserModel } from '../models/user.model';
+<% } %>
 
 interface TokenPayload {
   userId: string;
@@ -41,10 +45,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       where: { id: decoded.userId },
       include: { role: true }
     });
-<% } else { %>
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
+<% } else if (orm === 'Mongoose') { %>
+    const user = await UserModel.findById(decoded.userId).populate('roleId');
+<% } else if (orm === 'Sequelize') { %>
+    const user = await UserModel.findByPk(decoded.userId, { include: ['role'] });
+<% } else if (orm === 'TypeORM') { %>
+    const user = await UserModel.findOne({ where: { id: decoded.userId as any }, relations: ['role'] });
 <% } %>
     
     if (!user) {
@@ -52,14 +58,17 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     }
     
     req.user = {
-      id: user.id,
+      id: user.id || (user as any)._id,
       email: user.email,
 <% if (orm === 'Prisma') { %>
       role: (user as any).role?.name || decoded.role
+<% } else if (orm === 'Mongoose') { %>
+      role: (user.roleId as any)?.name || decoded.role
 <% } else { %>
-      role: (user as any).role || decoded.role
+      role: (user as any).role?.name || decoded.role
 <% } %>
     };
+
     
     next();
   } catch (error) {

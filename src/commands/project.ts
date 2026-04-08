@@ -168,11 +168,11 @@ export class Project {
       responses.framework,
       responses.enableGraphql,
     );
+    this.databaseService.setProjectPath(this.projectPath, responses.database);
     this.packageService.setDatabaseDependencies(
       this.databaseService.getDependencies(),
       this.databaseService.getDevDependencies(),
     );
-    this.databaseService.setProjectPath(this.projectPath, responses.database);
     this.templateService.setProjectPath(
       this.projectPath,
       this.databaseService,

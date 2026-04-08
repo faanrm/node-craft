@@ -136,21 +136,24 @@ export class Template {
 
 
     if (this.framework === 'Express') {
-       utilsTemplates.push(
-         { target: "src/utils/catch-async.ts", source: "express/utils/catch-async.ts" },
-         { target: "src/middleware/validator-middleware.ts", source: "express/middleware/validator.middleware.ts" },
-         { target: "src/middleware/error.middleware.ts", source: "express/middleware/error.middleware.ts" }
-       );
+      utilsTemplates.push(
+        { target: "src/utils/catch-async.ts", source: "express/utils/catch-async.ts" },
+        { target: "src/middleware/error.middleware.ts", source: "express/middleware/error.middleware.ts" }
+      );
+      // validator-middleware  needed for REST endpoints
+      if (this.isRest) {
+        utilsTemplates.push(
+          { target: "src/middleware/validator-middleware.ts", source: "express/middleware/validator.middleware.ts" }
+        );
+      }
     } else if (this.framework === 'Fastify') {
-       utilsTemplates.push(
-         { target: "src/middleware/error.middleware.ts", source: "fastify/middleware/error.middleware.ts" }
-       );
+      utilsTemplates.push(
+        { target: "src/middleware/error.middleware.ts", source: "fastify/middleware/error.middleware.ts" }
+      );
     }
 
-    // Infrastructure (Docker) - REMOVED
 
     for (const { target, source } of utilsTemplates) {
-      // Utilities currently don't use model data but we pass standard flags for consistency
       await this.processTemplate(source, target, {});
     }
   }
@@ -161,12 +164,14 @@ export class Template {
   private async generateModelFiles(models: ProjectModel[], isIncremental: boolean): Promise<void> {
     for (const model of models) {
       const name = model.name.toLowerCase();
+      const isAuthModel = (model.name === "User" || model.name === "Role") && this.isAuth;
+
       const modelTemplates = [
         { target: `src/interfaces/${name}.interface.ts`, source: "common/interface.ejs" },
         { target: `src/services/${name}.service.ts`, source: "common/service.ejs" },
       ];
 
-      if (this.isRest) {
+      if (this.isRest && !isAuthModel) {
         if (this.framework === 'Express') {
           modelTemplates.push(
             { target: `src/controllers/${name}.controller.ts`, source: "express/controller.ejs" },
@@ -180,20 +185,19 @@ export class Template {
         }
       }
 
-      // Skip User and Role models if authentication is enabled, as they are handled by Authentication service or generated with specific logic
-      if (!((model.name === "User" || model.name === "Role") && this.isAuth)) {
+      if (!isAuthModel) {
         modelTemplates.push({
           target: `src/models/${name}.model.ts`,
           source: this.databaseService.getModelTemplate(),
         });
       }
 
-
       for (const { target, source } of modelTemplates) {
         await this.processTemplate(source, target, {
           model,
           getZodValidator: this.getZodValidator.bind(this),
-        }, !isIncremental); // Only overwrite if not incremental
+          getTSType: this.getTSType.bind(this),
+        }, !isIncremental);
       }
     }
   }
@@ -217,13 +221,11 @@ export class Template {
     if (!isIncremental) {
       await fs.ensureDir(path.join(this.projectPath, graphqlDir));
 
-      // 1. Common
       await fs.ensureDir(path.join(this.projectPath, graphqlDir, "common"));
       await this.processTemplate("common/graphql/common.typeDefs.ejs", `${graphqlDir}/common/common.typeDefs.ts`, {});
       await this.processTemplate("common/graphql/common.resolvers.ejs", `${graphqlDir}/common/common.resolvers.ts`, {});
     }
 
-    // 2. Domains
     for (const model of models) {
       if ((model.name === "User" || model.name === "Role") && this.isAuth) {
         continue;
@@ -234,14 +236,12 @@ export class Template {
       await this.processTemplate("common/graphql/domain.resolvers.ejs", `${domainDir}/${model.name.toLowerCase()}.resolvers.ts`, { model }, !isIncremental);
     }
 
-    // 3. Auth (Only on full generation)
     if (!isIncremental && this.isAuth) {
       await fs.ensureDir(path.join(this.projectPath, graphqlDir, "auth"));
       await this.processTemplate("common/graphql/auth.typeDefs.ejs", `${graphqlDir}/auth/auth.typeDefs.ts`, {});
       await this.processTemplate("common/graphql/auth.resolvers.ejs", `${graphqlDir}/auth/auth.resolvers.ts`, {});
     }
 
-    // 4. Index (Merging - Always regenerate as it's safe)
     await this.processTemplate("common/graphql/index.ejs", `${graphqlDir}/index.ts`, {
       models: this.models.filter(m => !((m.name === "User" || m.name === "Role") && this.isAuth)),
     });
@@ -254,10 +254,15 @@ export class Template {
   private async generateRegistrationFiles(): Promise<void> {
     if (!this.isRest) return;
 
+    const routableModels = this.models.filter(
+      (m) => !((m.name === "User" || m.name === "Role") && this.isAuth)
+    );
+    if (routableModels.length === 0) return;
+
     if (this.framework === 'Express') {
-      await this.processTemplate("express/routing/index.ejs", "src/routes/index.ts", { models: this.models });
+      await this.processTemplate("express/routing/index.ejs", "src/routes/index.ts", { models: routableModels });
     } else if (this.framework === 'Fastify') {
-      await this.processTemplate("fastify/routing/index.ejs", "src/routes/index.ts", { models: this.models });
+      await this.processTemplate("fastify/routing/index.ejs", "src/routes/index.ts", { models: routableModels });
     }
   }
 
@@ -365,5 +370,40 @@ export class Template {
     }
 
     return validator;
+  }
+
+  /**
+   * Maps field types to TypeScript types.
+   */
+  private getTSType(field: ModelField): string {
+    let type: string;
+    switch (field.type) {
+      case "String":
+        type = "string";
+        break;
+      case "Int":
+      case "Float":
+        type = "number";
+        break;
+      case "Boolean":
+        type = "boolean";
+        break;
+      case "DateTime":
+        type = "Date";
+        break;
+      case "Json":
+        type = "any";
+        break;
+      default:
+        if (field.enumName) {
+          type = field.enumName;
+        } else if (field.isRelation) {
+          type = "string"; // Default to ID as string for interfaces
+        } else {
+          type = "any";
+        }
+    }
+
+    return type;
   }
 }

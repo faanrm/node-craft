@@ -29,7 +29,9 @@
     "build": "tsc --build --force && copyfiles --up 1 \"src/**/*.{ejs,html,json,yaml,jpg,png}\" dist/src",
     "generate": "prisma generate",
     "migrate": "prisma db push",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run tests/integration",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "chalk": "^5.4.1",
@@ -49,7 +51,8 @@
     "copyfiles": "^2.4.1",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^4.1.3"
   },
   "author": {
     "name": "krakennn"
