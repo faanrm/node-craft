@@ -4,7 +4,7 @@ import { GraphQLContext } from '../common/common.resolvers';
 
 export const authResolvers = {
   Query: {
-    me: async (_: any, __: any, context: GraphQLContext): Promise<IUser | null> => {
+    me: async (_: any, __: any, context: GraphQLContext): Promise<Omit<IUser, 'password' | 'createdAt' | 'updatedAt'> | null> => {
       if (!context.user) return null;
       try {
         return await authService.getUserById(context.user.id);
