@@ -14,7 +14,7 @@ export class <%= model.name %> extends Model<I<%= model.name %>> {
     <% if (field.relationType === 'OneToMany') { %>
   @HasMany(() => <%= field.relationModel %>)
   <%= field.name %>!: <%= field.relationModel %>[];
-    <% } else if (field.relationType === 'OneToOne') { %>
+    <% } else if (field.relationType === 'OneToOne' || field.relationType === 'ManyToOne') { %>
   @ForeignKey(() => <%= field.relationModel %>)
   @Column(DataType.STRING)
   <%= field.name %>Id!: string;

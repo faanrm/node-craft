@@ -6,6 +6,12 @@ import { I<%= model.name %> } from '../interfaces/<%= model.name.toLowerCase() %
 
 const <%= model.name %>Schema = new Schema<I<%= model.name %> & Document>({
 <% model.fields.forEach(field => { %>
+  <% if (field.isRelation && (field.relationType === 'OneToMany' || field.relationType === 'ManyToMany')) { %>
+  <%= field.name %>: [{
+    type: Schema.Types.ObjectId,
+    ref: '<%= field.relationModel %>'
+  }],
+  <% } else { %>
   <%= field.name %>: {
     type: <%- 
       field.isRelation ? 'Schema.Types.ObjectId' :
@@ -22,6 +28,7 @@ const <%= model.name %>Schema = new Schema<I<%= model.name %> & Document>({
     <% if (field.minLength !== undefined) { %>minlength: <%= field.minLength %>,<% } %>
     <% if (field.maxLength !== undefined) { %>maxlength: <%= field.maxLength %>,<% } %>
   },
+  <% } %>
 <% }) %>
 }, {
   timestamps: true,

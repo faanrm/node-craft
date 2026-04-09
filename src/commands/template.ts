@@ -398,7 +398,11 @@ export class Template {
         if (field.enumName) {
           type = field.enumName;
         } else if (field.isRelation) {
-          type = "string"; // Default to ID as string for interfaces
+          if (field.relationType === "OneToMany" || field.relationType === "ManyToMany") {
+            type = "string[]"; 
+          } else {
+            type = "string"; 
+          }
         } else {
           type = "any";
         }

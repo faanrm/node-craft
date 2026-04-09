@@ -17,6 +17,10 @@ export class <%= model.name %> {
   @OneToOne(() => <%= field.relationModel %>)
   @JoinColumn()
   <%= field.name %>!: <%= field.relationModel %>;
+    <% } else if (field.relationType === 'ManyToOne') { %>
+  @ManyToOne(() => <%= field.relationModel %>)
+  @JoinColumn()
+  <%= field.name %>!: <%= field.relationModel %>;
     <% } %>
   <% } else if (field.enumName && field.enumValues) { %>
   @Column({
