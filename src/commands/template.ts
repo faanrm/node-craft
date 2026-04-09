@@ -358,8 +358,7 @@ export class Template {
             .map((v) => `"${v}"`)
             .join(", ")}], { message: "Must be one of: ${enumValues.join(", ")}" })`;
         } else if (field.isRelation) {
-          // For relations, we often validate the ID field in the request body
-          validator = `z.string()`; // Default to string ID validation
+          validator = `z.string()`;
         } else {
           validator += ".any()";
         }
@@ -399,9 +398,9 @@ export class Template {
           type = field.enumName;
         } else if (field.isRelation) {
           if (field.relationType === "OneToMany" || field.relationType === "ManyToMany") {
-            type = "string[]"; 
+            type = "string[]";
           } else {
-            type = "string"; 
+            type = "string";
           }
         } else {
           type = "any";
