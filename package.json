@@ -2,7 +2,7 @@
   "name": "@krakennn/node-craft",
   "description": "NodeCraft — CLI and programmatic Node.js project scaffolding tool",
   "main": "dist/bin/node-craft.js",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "bin": {
     "node-craft": "dist/bin/node-craft.js"
   },
