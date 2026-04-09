@@ -198,17 +198,21 @@ export default defineConfig({
         let fieldLine = `  ${field.name} `;
 
         if (field.isRelation) {
-          if (field.relationType === "OneToOne") {
+          if (field.relationType === "OneToOne" || field.relationType === "ManyToOne") {
+            // No relation name required. Prisma will automatically map inverse 'User[]' to this 'User' foreign key
+            // or a 'User?' to 'User' 1to1.
             fieldLine += `${field.relationModel}? @relation(fields: [${field.name}Id], references: [id])\n`;
             schemaContent += fieldLine;
-            schemaContent += `  ${field.name}Id String? @unique\n`;
+            // Only OneToOne has an @unique on the foreign key field! ManyToOne doesn't!
+            if (field.relationType === "OneToOne") {
+              schemaContent += `  ${field.name}Id String? @unique\n`;
+            } else {
+              schemaContent += `  ${field.name}Id String?\n`;
+            }
             return;
-          } else if (field.relationType === "OneToMany") {
-            fieldLine += `${field.relationModel}[] @relation("${model.name}To${field.relationModel}")\n`;
-            schemaContent += fieldLine;
-            return;
-          } else if (field.relationType === "ManyToMany") {
-            fieldLine += `${field.relationModel}[] @relation("${model.name}To${field.relationModel}")\n`;
+          } else if (field.relationType === "OneToMany" || field.relationType === "ManyToMany") {
+            // Just output the Array type without forcing a named relation. Prisma auto-binds it.
+            fieldLine += `${field.relationModel}[]\n`;
             schemaContent += fieldLine;
             return;
           }

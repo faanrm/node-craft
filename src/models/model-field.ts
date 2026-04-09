@@ -5,7 +5,7 @@ export interface ModelField {
     isUnique: boolean;
     isRelation?: boolean;  
     relationModel?: string;
-    relationType?: 'OneToOne' | 'OneToMany' | 'ManyToMany';
+    relationType?: 'OneToOne' | 'OneToMany' | 'ManyToMany' | 'ManyToOne';
     minLength?: number;
     maxLength?: number;
     pattern?: string;

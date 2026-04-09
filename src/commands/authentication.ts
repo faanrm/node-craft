@@ -37,7 +37,7 @@ const DEFAULT_USER_MODEL: ProjectModel = {
 			isOptional: true,
 			isUnique: false,
 			isRelation: true,
-			relationType: "OneToOne",
+			relationType: "ManyToOne",
 			relationModel: "Role",
 		},
 	],
