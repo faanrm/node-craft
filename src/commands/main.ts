@@ -2,6 +2,7 @@ import { program } from "commander";
 import type { Project } from "./project";
 import type { Add } from "./add";
 import path from "path";
+import fs from "fs";
 import chalk from "chalk";
 export class CLI {
     private templatePath: string;
@@ -14,9 +15,18 @@ export class CLI {
     }
 
     setupCli() {
+        const pkgLocation = path.join(__dirname, '../../../package.json');
+        let version = "0.0.0";
+        try {
+            const pkg = JSON.parse(fs.readFileSync(pkgLocation, 'utf-8'));
+            version = pkg.version;
+        } catch (e) {
+
+        }
+
         program
             .name('node-craft')
-            .version('0.1.1')
+            .version(version)
             .description('NodeCraft: A high-performance CLI tool to scaffold  Node.js projects .')
 
         program
