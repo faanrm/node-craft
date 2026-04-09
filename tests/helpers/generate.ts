@@ -56,7 +56,7 @@ export async function generateProject(opts: GenerateOptions): Promise<string> {
     database: opts.database,
     orm: opts.orm,
     enableAuthentication: opts.enableAuthentication ?? false,
-    createModels: false, // always false — we control models directly
+    createModels: false,
     enableGraphql: opts.enableGraphql ?? false,
     enableRest: opts.enableRest ?? true,
   };
