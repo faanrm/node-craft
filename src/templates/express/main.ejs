@@ -23,7 +23,6 @@ dotenv.config();
 const app = express();
 const PORT = config.server.port;
 
-// 1. Initial middleware
 app.use(morgan('combined', {
   stream: {
     write: (message: string) => {
@@ -40,7 +39,6 @@ app.use(cors({
   credentials: true
 }));
 
-// 2. Feature Setup
 const bootstrap = async () => {
   // Database connection
   <% if (orm === 'Mongoose') { %>
@@ -76,7 +74,6 @@ bootstrap().catch(err => {
   process.exit(1);
 });
 
-// 3. Final middleware & Hello
 app.get('/hello', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',

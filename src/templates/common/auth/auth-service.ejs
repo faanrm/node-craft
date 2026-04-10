@@ -90,7 +90,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: <% if (orm === 'Prisma') { %> user.role.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any).name <% } else { %> (user.role || role).name <% } %>
+      role: <% if (orm === 'Prisma') { %> user.role?.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any)?.name <% } else { %> (user.role || role)?.name <% } %>
     };
   }
 
@@ -125,7 +125,7 @@ export class AuthService {
       {
         userId: user.id,
         email: user.email,
-        role: <% if (orm === 'Prisma') { %> user.role.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any).name <% } else if (orm === 'Sequelize') { %> user.role.name <% } else { %> user.role.name <% } %>
+        role: <% if (orm === 'Prisma') { %> user.role?.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any)?.name <% } else if (orm === 'Sequelize') { %> user.role?.name <% } else { %> user.role?.name <% } %>
       },
       jwtSecret,
       { expiresIn: jwtExpiresIn } as SignOptions
@@ -136,7 +136,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: <% if (orm === 'Prisma') { %> user.role.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any).name <% } else if (orm === 'Sequelize') { %> user.role.name <% } else { %> user.role.name <% } %>
+        role: <% if (orm === 'Prisma') { %> user.role?.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any)?.name <% } else if (orm === 'Sequelize') { %> user.role?.name <% } else { %> user.role?.name <% } %>
       },
       token
     };
@@ -164,7 +164,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: <% if (orm === 'Prisma') { %> user.role.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any).name <% } else if (orm === 'Sequelize') { %> user.role.name <% } else { %> user.role.name <% } %>
+      role: <% if (orm === 'Prisma') { %> user.role?.name <% } else if (orm === 'Mongoose') { %> (user.roleId as any)?.name <% } else if (orm === 'Sequelize') { %> user.role?.name <% } else { %> user.role?.name <% } %>
     };
   }
 }
