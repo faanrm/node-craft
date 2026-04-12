@@ -75,15 +75,16 @@ export class Template {
     await this.generateModelFiles(targets, isIncremental);
     await this.generateRegistrationFiles();
 
+    // Generate GraphQL files BEFORE main file so schema is available
+    if (this.isGraphql) {
+      await this.generateGraphqlFiles(targets, isIncremental);
+    }
+
     if (!isIncremental) {
       await this.generateMainFile();
       if (this.framework === 'Fastify') {
         await this.generateFastifyPlugins();
       }
-    }
-
-    if (this.isGraphql) {
-      await this.generateGraphqlFiles(targets, isIncremental);
     }
   }
 
@@ -210,6 +211,9 @@ export class Template {
     await this.processTemplate(templateName, "src/index.ts", {
       models: this.models,
       projectName: path.basename(this.projectPath),
+      isGraphql: this.isGraphql,
+      isRest: this.isRest,
+      orm: this.databaseService.getOrmName(),
     });
   }
 
@@ -222,7 +226,7 @@ export class Template {
       await fs.ensureDir(path.join(this.projectPath, graphqlDir));
 
       await fs.ensureDir(path.join(this.projectPath, graphqlDir, "common"));
-      await this.processTemplate("common/graphql/common.typeDefs.ejs", `${graphqlDir}/common/common.typeDefs.ts`, {});
+      await this.processTemplate("common/graphql/common.typeDefs.ejs", `${graphqlDir}/common/common.typeDefs.ts`, { isAuth: this.isAuth });
       await this.processTemplate("common/graphql/common.resolvers.ejs", `${graphqlDir}/common/common.resolvers.ts`, {});
     }
 

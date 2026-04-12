@@ -34,7 +34,8 @@ export class Package {
 			version: "1.0.0",
 			main: "dist/index.js",
 			scripts: {
-				start: "nodemon",
+				start: "node dist/index.js",
+				dev: "tsx watch src/index.ts",
 				build: this.dbDependencies.includes("prisma")
 					? "prisma generate && tsc"
 					: "tsc",
@@ -56,19 +57,26 @@ export class Package {
 			},
 			devDependencies: {
 				"@types/node": "^20.6.0",
-				nodemon: "^3.0.1",
+				"tsx": "^4.7.1",
 				"@types/fs-extra": "^11.0.4",
-				"ts-node": "^10.9.2",
 				typescript: "^5.2.2",
 			},
 		};
 
 		// Dynamic DB dependencies
 		this.dbDependencies.forEach((dep) => {
-			packageJson.dependencies[dep] = "latest";
+			if (dep === "prisma" || dep === "@prisma/client") {
+				packageJson.dependencies[dep] = "^5.22.0";
+			} else {
+				packageJson.dependencies[dep] = "latest";
+			}
 		});
 		this.dbDevDependencies.forEach((dep) => {
-			packageJson.devDependencies[dep] = "latest";
+			if (dep === "prisma") {
+				packageJson.devDependencies[dep] = "^5.22.0";
+			} else {
+				packageJson.devDependencies[dep] = "latest";
+			}
 		});
 
 		if (this.framework === "Express") {
@@ -139,7 +147,6 @@ export class Package {
 				moduleResolution: "Node",
 				sourceMap: true,
 				noImplicitAny: true,
-				baseUrl: "src",
 				outDir: "dist",
 				experimentalDecorators: true,
 				emitDecoratorMetadata: true,

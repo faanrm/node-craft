@@ -104,7 +104,7 @@ export class Prisma implements DatabaseService {
     await fs.ensureDir(path.join(this.projectPath, "prisma"));
 
     let schemaContent =
-      'generator client {\n  provider = "prisma-client-js"\n}\n\n';
+      'generator client {\n  provider = "prisma-client-js"\n  engineType = "library"\n}\n\n';
 
     let dbProvider, dbUrlEnvVar, idField;
     switch (this.database) {
@@ -127,22 +127,13 @@ export class Prisma implements DatabaseService {
         idField = `  id String @id @default(uuid())\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n`;
     }
 
-    schemaContent += `datasource db {\n  provider = "${dbProvider}"\n}\n\n`;
+    schemaContent += `datasource db {
+  provider = "${dbProvider}"
+  url      = env("DATABASE_URL")
+}\n\n`;
 
-    const prismaConfigContent = `import "dotenv/config";
-import { defineConfig } from "prisma/config";
-
-export default defineConfig({
-  schema: "schema.prisma",
-  migrations: {
-    path: "migrations",
-  },
-  datasource: {
-    url: process.env["DATABASE_URL"],
-  },
-});
-`;
-    await fs.writeFile(path.join(this.projectPath, "prisma", "prisma.config.ts"), prismaConfigContent);
+    // Note: prisma.config.ts is only needed for Prisma 6+
+    // For Prisma 5.x (which we use), CLI flags are still supported
 
     // Dedicated tsconfig for prisma/ so the IDE can resolve "prisma/config" subpath export
     const prismaTsConfig = {

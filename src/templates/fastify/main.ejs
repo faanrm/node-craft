@@ -8,72 +8,78 @@ import config from './utils/config';
 dotenv.config();
 
 const app: FastifyInstance = Fastify({
-logger: true
+  logger: true
 });
 
 const PORT = config.server.port;
 
-const start = async () => {
-await app.register(cors, { origin: config.server.cors.origin });
-await app.register(helmet);
+<% if (isRest || isGraphql) { %>
+app.get('/hello', async (request: FastifyRequest, reply: FastifyReply) => {
+  return {
+    status: 'OK',
+    message: '<%= projectName %> API is running (Fastify)',
+    version: '1.0.0',
+    environment: config.server.env,
+    timestamp: new Date().toISOString()
+  };
+});
+<% } %>
 
-<% if (orm==='Prisma' ) { %>
+const start = async () => {
+  await app.register(cors, { origin: config.server.cors.origin });
+  await app.register(helmet);
+
+  <% if (orm==='Prisma' ) { %>
   const { default: prismaPlugin } = await import('./plugins/prisma');
   await app.register(prismaPlugin);
   <% } else { %>
-    const { default: db } = await import('./utils/db');
-    <% if (orm==='Mongoose' ) { %>
-      await db();
-      <% } else if (orm==='Sequelize' ) { %>
-        await db.authenticate();
-        logger.info('Sequelize connection established');
-        <% } else if (orm==='TypeORM' ) { %>
-          await db.initialize();
-          logger.info('TypeORM data source initialized');
-          <% } %>
-            <% } %>
+  const { default: db } = await import('./utils/db');
+  <% if (orm==='Mongoose' ) { %>
+  await db();
+  <% } else if (orm==='Sequelize' ) { %>
+  await db.authenticate();
+  logger.info('Sequelize connection established');
+  <% } else if (orm==='TypeORM' ) { %>
+  await db.initialize();
+  logger.info('TypeORM data source initialized');
+  <% } %>
+  <% } %>
 
-              <% if (isGraphql) { %>
-                const { ApolloServer } = await import('@apollo/server');
-                const { default: fastifyApollo, fastifyApolloDrainPlugin } = await import('@as-integrations/fastify');
-                const { schema } = await import('./graphql');
+  <% if (isGraphql) { %>
+  const { ApolloServer } = await import('@apollo/server');
+  const { default: fastifyApollo, fastifyApolloDrainPlugin } = await import('@as-integrations/fastify');
+  const { ApolloServerPluginLandingPageLocalDefault } = await import('@apollo/server/plugin/landingPage/default');
+  const { schema } = await import('./graphql');
 
-                const server = new ApolloServer({
-                schema,
-                plugins: [fastifyApolloDrainPlugin(app)],
-                });
+  const server = new ApolloServer({
+    schema,
+    plugins: [
+      fastifyApolloDrainPlugin(app),
+      ApolloServerPluginLandingPageLocalDefault()
+    ],
+  });
 
-                await server.start();
-                await app.register(fastifyApollo(server), {
-                context: async (request: any) => ({ user: request.user }),
-                });
-                logger.info('GraphQL support enabled');
-                <% } %>
+  await server.start();
+  await app.register(fastifyApollo(server), {
+    context: async (request: any) => ({ user: request.user }),
+  });
+  logger.info('GraphQL Playground: http://localhost:' + PORT + '/graphql');
+  <% } %>
 
-                  <% if (isRest) { %>
-                    await app.register(import('./routes'), { prefix: '/api' });
-                    logger.info('REST support enabled');
-                    <% } %>
+  <% if (isRest) { %>
+  await app.register(import('./routes'), { prefix: '/api' });
+  logger.info('REST support enabled at /api');
+  <% } %>
 
-                      app.get('/hello', async (request: FastifyRequest, reply: FastifyReply) => {
-                      return {
-                      status: 'OK',
-                      message: '<%= projectName %> API is running (Fastify)',
-                        version: '1.0.0',
-                        environment: config.server.env,
-                        timestamp: new Date().toISOString()
-                        }
-                        });
+  try {
+    await app.listen({ port: PORT, host: '0.0.0.0' });
+    logger.info(`<%= projectName %> API running on port ${PORT}`);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+};
 
-                        try {
-                        await app.listen({ port: PORT, host: '0.0.0.0' });
-                        logger.info(`<%= projectName %> API running on port ${PORT}`);
-                          } catch (err) {
-                          app.log.error(err);
-                          process.exit(1);
-                          }
-                          };
+start();
 
-                          start();
-
-                          export default app;
+export default app;

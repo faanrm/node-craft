@@ -11,4 +11,25 @@ export const commonTypeDefs = gql`
   type Mutation {
     _empty: String
   }
+
+  <% if (isAuth) { %>
+  type User {
+    id: ID!
+    email: String!
+    name: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
+  input CreateUserInput {
+    email: String!
+    password: String!
+    name: String
+  }
+
+  input LoginInput {
+    email: String!
+    password: String!
+  }
+  <% } %>
 `;

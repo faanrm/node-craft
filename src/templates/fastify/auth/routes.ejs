@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import AuthController from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth.middleware';
-// import { validateRequest } from '../middleware/validator-middleware'; // Fastify uses schemas for validation usually
+// import { validateRequest } from '../middleware/validator-middleware'; 
 import { UserModel } from '../models/user.model';
 
 export default async function (fastify: FastifyInstance) {

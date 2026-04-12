@@ -10,6 +10,7 @@ import config from './utils/config';
 <% if (isGraphql) { %>
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { schema } from './graphql';
 <% } %>
 
@@ -39,41 +40,7 @@ app.use(cors({
   credentials: true
 }));
 
-const bootstrap = async () => {
-  // Database connection
-  <% if (orm === 'Mongoose') { %>
-  await db();
-  <% } else if (orm === 'Sequelize') { %>
-  await db.authenticate();
-  logger.info('Sequelize connection established');
-  <% } else if (orm === 'TypeORM') { %>
-  await db.initialize();
-  logger.info('TypeORM data source initialized');
-  <% } %>
-  // Prisma connects lazily, no explicit call needed here
-  <% if (isGraphql) { %>
-  const server = new ApolloServer({
-    schema,
-  });
-
-  await server.start();
-  app.use('/graphql', expressMiddleware(server, {
-    context: async ({ req }) => ({ user: (req as any).user }),
-  }));
-  logger.info('GraphQL support enabled at /graphql');
-  <% } %>
-
-  <% if (isRest) { %>
-  app.use('/api', apiRouter);
-  logger.info('REST support enabled at /api');
-  <% } %>
-};
-
-bootstrap().catch(err => {
-  logger.error('Failed to bootstrap application', err);
-  process.exit(1);
-});
-
+<% if (isRest || isGraphql) { %>
 app.get('/hello', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'OK',
@@ -83,22 +50,60 @@ app.get('/hello', (req: Request, res: Response) => {
     timestamp: new Date().toISOString()
   });
 });
+<% } %>
 
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    status: 'error',
-    message: 'Endpoint not found',
-    path: req.originalUrl,
-    timestamp: new Date().toISOString()
+const bootstrap = async () => {
+  <% if (orm === 'Mongoose') { %>
+  await db();
+  <% } else if (orm === 'Sequelize') { %>
+  await db.authenticate();
+  logger.info('Sequelize connection established');
+  <% } else if (orm === 'TypeORM') { %>
+  await db.initialize();
+  logger.info('TypeORM data source initialized');
+  <% } %>
+  <% if (isGraphql) { %>
+  try {
+    const server = new ApolloServer({
+      schema,
+      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+    });
+
+    await server.start();
+
+    app.use('/graphql', expressMiddleware(server, {
+      context: async ({ req }) => ({ user: (req as any).user }),
+    }));
+
+    logger.info('GraphQL Playground: http://localhost:' + PORT + '/graphql');
+  } catch (error) {
+    logger.error('Failed to start GraphQL server:', error);
+  }
+  <% } %>
+
+  <% if (isRest) { %>
+  app.use('/api', apiRouter);
+  logger.info('REST support enabled at /api');
+  <% } %>
+
+  app.use((req: Request, res: Response) => {
+    res.status(404).json({
+      status: 'error',
+      message: 'Endpoint not found',
+      path: req.originalUrl,
+      timestamp: new Date().toISOString()
+    });
   });
-});
 
-app.use(errorHandler);
+  app.use(errorHandler);
 
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    logger.info(`<%= projectName %> API running on port ${PORT} in ${config.server.env} mode`);
-  });
-}
+  if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+      logger.info(`<%= projectName %> API running on port ${PORT} in ${config.server.env} mode`);
+    });
+  }
+};
+
+bootstrap();
 
 export default app;

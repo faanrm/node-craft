@@ -1,7 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env file
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const prismaClientSingleton = () => {
-  return new PrismaClient();
+  return new PrismaClient({});
 };
 
 declare const globalThis: {
